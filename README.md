@@ -6,7 +6,11 @@
 
 - [문서 안내](docs/README.md)
 - [2주차 문서](docs/week02/README.md)
+- [2주차 실습](docs/week02/practice.md)
+- [2주차 이론](docs/week02/theory.md)
 - [3주차 문서](docs/week03/README.md)
+- [3주차 실습](docs/week03/practice.md)
+- [3주차 이론](docs/week03/theory.md)
 
 ## 프로젝트 개요
 

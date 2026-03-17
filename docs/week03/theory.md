@@ -173,6 +173,37 @@ private SmsSender smsSender;
 
 - 스프링이 `SmsSender` 타입의 Bean을 찾아 넣어준다
 
+쉽게 말하면:
+
+- "이 자리에 필요한 객체를 스프링이 자동으로 연결해 주세요"라는 뜻이다
+
+사용 위치:
+
+- 필드 위
+- 생성자 위
+- setter 메소드 위
+
+예시 1. 필드 주입
+
+```java
+@Autowired
+private SmsSender smsSender;
+```
+
+예시 2. 생성자 주입
+
+```java
+@Autowired
+public HardWorkUnit(WorkUnit workUnit) {
+    this.workUnit = workUnit;
+}
+```
+
+정리:
+
+- 필드 주입은 코드가 짧지만 의존성이 숨겨진다
+- 생성자 주입은 의존성이 드러나고 실무에서 더 권장된다
+
 ### 5-6. `@Configuration`
 
 설정 클래스를 나타낸다.
@@ -213,6 +244,56 @@ public SmsSender configSms() {
 의미:
 
 - 지정한 패키지를 훑어서 Bean 후보를 찾아 등록한다
+
+### 5-9. `@Value`
+
+프로퍼티 파일이나 상수 값을 주입할 때 사용한다.
+
+```java
+@Value("${message.greeting}")
+private String msg;
+```
+
+또는
+
+```java
+@Value("${message.greeting}")
+public void setMsg(String msg) {
+    this.msg = msg;
+}
+```
+
+의미:
+
+- `application.properties`의 `message.greeting` 값을 찾아 넣는다
+
+중요:
+
+- `@Autowired`는 Bean 객체 주입
+- `@Value`는 설정값 주입
+
+### 5-10. `@Qualifier`
+
+동일한 타입의 Bean이 여러 개 있을 때, 그중 어떤 Bean을 주입할지 지정하는 어노테이션이다.
+
+예:
+
+```java
+@Autowired
+@Qualifier("configSms")
+private SmsSender autoSms;
+```
+
+의미:
+
+- `SmsSender` 타입 Bean이 여러 개 있어도
+- 이름이 `configSms`인 Bean을 선택해서 넣는다
+
+왜 필요한가:
+
+- `@Autowired`는 기본적으로 타입 기준으로 찾는다
+- 그런데 같은 타입 Bean이 2개 이상이면 어떤 Bean을 넣어야 할지 애매해진다
+- 이때 `@Qualifier`로 이름을 지정한다
 
 ## 6. DI 방식 3가지
 
@@ -338,6 +419,34 @@ private SmsSender smsSender;
 
 기본적으로는 타입이 맞는 Bean이 있어야 한다.  
 같은 타입 Bean이 여러 개면 충돌할 수 있어 `@Qualifier` 같은 추가 설정이 필요할 수 있다.
+
+즉 조건은 이렇다.
+
+- 스프링 컨테이너 안에 해당 타입 Bean이 있어야 한다
+- 타입이 여러 개면 어떤 Bean을 넣을지 더 지정해야 할 수 있다
+
+### Q3. 문자열 값도 `@Autowired`로 주입하는가
+
+보통은 아니다.  
+문자열, 숫자, 프로퍼티 값 같은 설정 데이터는 `@Value`로 넣는 경우가 많다.
+
+### Q4. 같은 타입 Bean이 여러 개면 어떻게 하는가
+
+`@Qualifier`를 사용해서 특정 Bean 이름을 지정한다.
+
+예:
+
+```java
+@Autowired
+@Qualifier("configSms")
+private SmsSender autoSms;
+```
+
+즉:
+
+- 타입은 `SmsSender`
+- 이름은 `configSms`
+- 이 조건에 맞는 Bean을 선택해서 주입한다
 
 ### Q3. `@Component`와 `@Controller`는 무엇이 다른가
 

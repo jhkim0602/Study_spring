@@ -10,4 +10,9 @@ public class AppConfig {
 	public SmsSender configSms() {
 		return new SmsSender("학교실습용 SMS 발신기");
 	}
+
+	@Bean
+	public SmsSender autoSms() {
+		return new SmsSender("자동 주입용 SMS 발신기");
+	}
 }

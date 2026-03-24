@@ -47,17 +47,11 @@ public class DIController {
 		try (ClassPathXmlApplicationContext xmlContext =
 				new ClassPathXmlApplicationContext("xml/week04-beans.xml")) {
 			SmsSender xmlSms = xmlContext.getBean("week04XmlSms", SmsSender.class);
-			SmsSender configSms = context.getBean("configSms", SmsSender.class);
+			XmlDiService xmlDiService = xmlContext.getBean("xmlDiService", XmlDiService.class);
 
 			ModelAndView mav = new ModelAndView("week04/beanView");
-			mav.addObject("xmlBeanName", "week04XmlSms");
-			mav.addObject("configBeanName", "configSms");
 			mav.addObject("xmlSms", xmlSms);
-			mav.addObject("configSms", configSms);
-			mav.addObject("xmlSmsType", xmlSms.getClass().getName());
-			mav.addObject("configSmsType", configSms.getClass().getName());
-			mav.addObject("xmlMessage", xmlSms.send("010-1111-2222", "XML 방식으로 생성한 Bean"));
-			mav.addObject("configMessage", configSms.send("010-3333-4444", "Java Config 방식으로 생성한 Bean"));
+			mav.addObject("xmlDiService", xmlDiService);
 			return mav;
 		}
 	}

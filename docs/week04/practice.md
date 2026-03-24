@@ -251,7 +251,6 @@ public ModelAndView configDi(ModelAndView mav) {
 ```java
 @Component
 @Getter
-@RequiredArgsConstructor
 public class LombokWorkUnit {
 
     private final SmsSender configSms;
@@ -259,13 +258,19 @@ public class LombokWorkUnit {
 
     @Value("${message.greeting}")
     private String msg;
+
+    public LombokWorkUnit(SmsSender configSms, WorkUnit week04WorkUnit) {
+        this.configSms = configSms;
+        this.week04WorkUnit = week04WorkUnit;
+    }
 }
 ```
 
 의미:
 
-- Lombok이 생성자를 자동 생성
-- 스프링이 그 생성자에 Bean을 주입
+- Lombok은 getter 같은 반복 코드를 줄여 준다
+- 생성자는 Eclipse 실행 안정성을 위해 명시적으로 두었다
+- 스프링은 그 생성자에 Bean을 주입한다
 - `msg`는 프로퍼티 값으로 채운다
 
 ### 8-2. XML + Lombok 생성자 주입
@@ -321,11 +326,13 @@ try (ClassPathXmlApplicationContext xmlContext =
 - `/xmlDI`
 - `/week04/xmlDI`
 
-이 실습에서 확인하는 것:
+이 실습에서 결과 화면에 직접 보이는 항목:
 
-- XML 컨테이너에서 가져온 Bean
-- Java Config에서 가져온 Bean
-- 두 방식의 등록 차이와 공통점
+- xml 설정에 의해서 설정된, 인젝션한 객체
+- 생성자를 통한 DI된 객체
+- 생성자를 통한 DI된 기본 데이터
+- Setter를 통해 DI된 객체
+- Setter를 통한 DI된 기본 데이터
 
 ## 10. ApplicationContext 확인 실습
 

@@ -13,6 +13,23 @@
 		<constructor-arg value="XML 주입용 SMS 발신기" />
 	</bean>
 
+	<bean id="xmlWorkUnit" class="Lect_B.week04.WorkUnit" />
+
+	<bean id="xmlDiService" class="Lect_B.week04.XmlDiService">
+		<constructor-arg>
+			<ref bean="xmlSms" />
+		</constructor-arg>
+		<constructor-arg>
+			<value type="long">30000</value>
+		</constructor-arg>
+		<property name="workUnit">
+			<ref bean="xmlWorkUnit" />
+		</property>
+		<property name="msg">
+			<value>Setter를 통해 주입된 기본 데이터</value>
+		</property>
+	</bean>
+
 	<bean id="xmlLombokService" class="Lect_B.week04.LombokXmlService">
 		<constructor-arg>
 			<ref bean="xmlSms" />

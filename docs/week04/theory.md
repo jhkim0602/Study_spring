@@ -265,14 +265,13 @@ PPT에서는 Lombok의 `@RequiredArgsConstructor`도 소개했다.
 - 생성자 주입 코드가 짧아진다
 - 스프링 4.3 이후에는 생성자가 하나면 `@Autowired` 생략 가능
 
-현재 실습 코드에서는 두 가지 방식으로 Lombok을 사용한다.
+현재 실습 코드에서는 Lombok을 사용하되, Eclipse 실행 안정성을 위해 생성자는 명시적으로 두고 `@Getter` 중심으로 활용한다.
 
 ### 8-1. 컴포넌트 스캔 + Lombok
 
 ```java
 @Component
 @Getter
-@RequiredArgsConstructor
 public class LombokWorkUnit {
 
     private final SmsSender configSms;
@@ -280,6 +279,10 @@ public class LombokWorkUnit {
 
     @Value("${message.greeting}")
     private String msg;
+    public LombokWorkUnit(SmsSender configSms, WorkUnit week04WorkUnit) {
+        this.configSms = configSms;
+        this.week04WorkUnit = week04WorkUnit;
+    }
 }
 ```
 
@@ -366,6 +369,14 @@ PPT에서는 XML에서도 생성자 주입과 Setter 주입을 할 수 있다고
 
 - 객체 타입은 `<ref>`로 주입
 - 기본 타입 값은 `<value type="long">`처럼 타입을 명시해 주입
+
+실습에서는 XML 주입 결과 화면에서 아래 항목을 직접 확인하도록 구성했다.
+
+- xml 설정에 의해서 설정된, 인젝션한 객체
+- 생성자를 통한 DI된 객체
+- 생성자를 통한 DI된 기본 데이터
+- Setter를 통해 DI된 객체
+- Setter를 통한 DI된 기본 데이터
 
 즉 XML이든 Java Config든 본질은 같다.
 

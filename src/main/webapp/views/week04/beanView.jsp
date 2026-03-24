@@ -9,17 +9,11 @@
 
 <h1>XML 기반 DI 확인</h1>
 
-<h2>XML 컨테이너에서 가져온 객체</h2>
-<p>빈 이름: ${xmlBeanName}</p>
-<p>빈 타입: ${xmlSmsType}</p>
-<p>객체 내부 값: ${xmlSms.senderName}</p>
-<p>실행 결과: ${xmlMessage}</p>
-
-<h2>Java Config 컨테이너에서 가져온 객체</h2>
-<p>빈 이름: ${configBeanName}</p>
-<p>빈 타입: ${configSmsType}</p>
-<p>객체 내부 값: ${configSms.senderName}</p>
-<p>실행 결과: ${configMessage}</p>
+<p>xml 설정에 의해서 설정된, 인젝션한 객체 : ${xmlSms}</p>
+<p>생성자를 통한 DI된 객체 : ${xmlDiService.constructorSms}</p>
+<p>생성자를 통한 DI된 기본 데이터 : ${xmlDiService.constructorPeriodTime}</p>
+<p>Setter를 통해 DI된 객체 : ${xmlDiService.workUnit}</p>
+<p>Setter를 통한 DI된 기본 데이터 : ${xmlDiService.msg}</p>
 
 <p><a href="/week04">4주차 메인으로 이동</a></p>
 

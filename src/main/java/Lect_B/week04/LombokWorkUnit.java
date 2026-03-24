@@ -4,15 +4,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Component
 @Getter
-@RequiredArgsConstructor
 public class LombokWorkUnit {
 
 	private final SmsSender configSms;
 	private final WorkUnit week04WorkUnit;
+
+	public LombokWorkUnit(SmsSender configSms, WorkUnit week04WorkUnit) {
+		this.configSms = configSms;
+		this.week04WorkUnit = week04WorkUnit;
+	}
 
 	@Value("${message.greeting}")
 	private String msg;

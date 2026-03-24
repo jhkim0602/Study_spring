@@ -3,7 +3,7 @@ package com.example.lect8;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {"com.example.lect8", "Lect_B_week02", "Lect_B.week03"})
+@SpringBootApplication(scanBasePackages = {"Lect_B.week04"})
 public class Lect8Application {
 
 	public static void main(String[] args) {

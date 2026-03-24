@@ -7,6 +7,7 @@
 - [문서 안내](docs/README.md)
 - [2주차](docs/week02/README.md)
 - [3주차](docs/week03/README.md)
+- [4주차](docs/week04/README.md)
 
 ## 프로젝트 개요
 

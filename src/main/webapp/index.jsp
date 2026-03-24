@@ -12,5 +12,8 @@
     <br>
     <h3>3주차 실습</h3>
     <a href="/createBean">빈객체 생성 예제</a>
+    <br>
+    <h3>4주차 실습</h3>
+    <a href="/annotationDI">DI 실습</a>
 </body>
 </html>

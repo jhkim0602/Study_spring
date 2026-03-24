@@ -25,6 +25,10 @@ docs/
     README.md
     practice.md
     theory.md
+  week04/
+    README.md
+    practice.md
+    theory.md
 ```
 
 ## 왜 폴더 안의 md 분리가 좋은가
@@ -45,3 +49,6 @@ docs/
 - [3주차 문서 인덱스](week03/README.md)
 - [3주차 실습](week03/practice.md)
 - [3주차 이론](week03/theory.md)
+- [4주차 문서 인덱스](week04/README.md)
+- [4주차 실습](week04/practice.md)
+- [4주차 이론](week04/theory.md)

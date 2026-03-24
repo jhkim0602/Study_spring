@@ -4,11 +4,13 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>Week04 Annotation DI View</title>
 </head>
 <body>
-어노테이션 DI(멤버) 객체 : ${obj.sms}<br>
-어노테이션 DI(생성자) 객체 : ${obj.workUnit}<br>
-어노테이션 DI() 객체 : ${obj.msg}<br>
+<h1>어노테이션을 이용한 DI 예제</h1>
+<p>SmsSender 객체: ${obj.sms}</p>
+<p>WorkUnit 객체: ${obj.workUnit}</p>
+<p>설정값(message.greeting): ${obj.msg}</p>
+<p><a href="/week04">4주차 메인으로 이동</a></p>
 </body>
 </html>

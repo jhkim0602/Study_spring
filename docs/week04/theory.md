@@ -265,7 +265,61 @@ PPT에서는 Lombok의 `@RequiredArgsConstructor`도 소개했다.
 - 생성자 주입 코드가 짧아진다
 - 스프링 4.3 이후에는 생성자가 하나면 `@Autowired` 생략 가능
 
-현재 프로젝트 코드에는 Lombok을 직접 쓰지는 않지만, 개념상 생성자 주입의 확장으로 이해하면 된다.
+현재 실습 코드에서는 두 가지 방식으로 Lombok을 사용한다.
+
+### 8-1. 컴포넌트 스캔 + Lombok
+
+```java
+@Component
+@Getter
+@RequiredArgsConstructor
+public class LombokWorkUnit {
+
+    private final SmsSender configSms;
+    private final WorkUnit week04WorkUnit;
+
+    @Value("${message.greeting}")
+    private String msg;
+}
+```
+
+의미:
+
+- `final` 필드를 기준으로 생성자가 자동 생성된다
+- 스프링은 그 생성자를 이용해 Bean을 주입한다
+- Lombok을 사용해 생성자 코드를 직접 쓰지 않아도 된다
+
+### 8-2. XML + Lombok 생성자 주입
+
+강의자료에서 말한 흐름대로 XML에서 인젝션 정보를 쓰고, 클래스는 Lombok으로 생성자를 준비하는 구조도 가능하다.
+
+```java
+@Getter
+@RequiredArgsConstructor
+public class LombokXmlService {
+
+    private final SmsSender smsSender;
+    private final long periodTime;
+}
+```
+
+```xml
+<bean id="xmlLombokService" class="Lect_B.week04.LombokXmlService">
+    <constructor-arg>
+        <ref bean="xmlSms" />
+    </constructor-arg>
+    <constructor-arg>
+        <value type="long">30000</value>
+    </constructor-arg>
+</bean>
+```
+
+의미:
+
+- Lombok이 `SmsSender`, `long` 파라미터 생성자를 만든다
+- XML이 그 생성자에 들어갈 값을 제공한다
+- `<ref bean="xmlSms" />`는 Bean 객체 주입
+- `<value type="long">30000</value>`는 기본값 주입
 
 ## 9. XML 기반 DI
 
@@ -290,6 +344,28 @@ PPT에서는 XML에서도 생성자 주입과 Setter 주입을 할 수 있다고
     </property>
 </bean>
 ```
+
+실습에서는 XML 생성자 주입을 아래처럼 구체적으로 확인했다.
+
+```xml
+<bean id="xmlSms" class="Lect_B.week04.SmsSender">
+    <constructor-arg value="XML 주입용 SMS 발신기" />
+</bean>
+
+<bean id="xmlLombokService" class="Lect_B.week04.LombokXmlService">
+    <constructor-arg>
+        <ref bean="xmlSms" />
+    </constructor-arg>
+    <constructor-arg>
+        <value type="long">30000</value>
+    </constructor-arg>
+</bean>
+```
+
+이 구조는 강의자료의 다음 두 포인트를 그대로 보여준다.
+
+- 객체 타입은 `<ref>`로 주입
+- 기본 타입 값은 `<value type="long">`처럼 타입을 명시해 주입
 
 즉 XML이든 Java Config든 본질은 같다.
 
@@ -353,6 +429,19 @@ PPT 마지막 부분에서는 두 방식을 비교했다.
 
 현재 실습은 `WebApplicationContext`를 주입받는 표준 방식에 가깝다.
 
+```java
+@Autowired
+private WebApplicationContext context;
+```
+
+그리고 `contextDI` 실습에서는 이 컨테이너에서 Bean을 직접 꺼내 화면으로 넘긴다.
+
+```java
+HardWorkUnit work = context.getBean("hardWorkUnit", HardWorkUnit.class);
+```
+
+즉 이론에서 말한 "주입된 컨테이너를 활용하는 방식"을 현재 프로젝트에서 바로 확인할 수 있다.
+
 ## 13. 시험 대비 핵심 정리
 
 - Bean 설정 방식은 XML, Java Config, 컴포넌트 스캔 3가지로 정리한다
@@ -362,5 +451,7 @@ PPT 마지막 부분에서는 두 방식을 비교했다.
 - 같은 타입 Bean이 여러 개면 `@Qualifier`가 필요하다
 - `@Value`는 프로퍼티 값을 주입할 때 사용한다
 - Java Config에서는 `@Bean` 메서드 이름이 기본 Bean 이름이다
+- XML 생성자 주입에서는 `<ref>`로 Bean을, `<value type=\"long\">`로 기본값을 넣을 수 있다
+- Lombok은 생성자 주입 코드를 줄여 주며 XML 주입과도 함께 사용할 수 있다
 - XML에서도 생성자 주입, Setter 주입, 자동 연결, 부모 Bean 재사용, 컬렉션 주입이 가능하다
 - `ApplicationContext`는 컨테이너의 대표 인터페이스다

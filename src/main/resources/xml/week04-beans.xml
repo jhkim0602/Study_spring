@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="week04XmlSms" class="Lect_B.week04.SmsSender">
+		<constructor-arg value="4주차 XML SMS 발신기" />
+	</bean>
+
+	<bean id="xmlSms" class="Lect_B.week04.SmsSender">
+		<constructor-arg value="XML 주입용 SMS 발신기" />
+	</bean>
+
+	<bean id="xmlLombokService" class="Lect_B.week04.LombokXmlService">
+		<constructor-arg>
+			<ref bean="xmlSms" />
+		</constructor-arg>
+		<constructor-arg>
+			<value type="long">30000</value>
+		</constructor-arg>
+	</bean>
+
+</beans>

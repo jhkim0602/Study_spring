@@ -15,5 +15,11 @@
     <br>
     <h3>4주차 실습</h3>
     <a href="/week04">DI 실습</a>
+    <br>
+    <h3>5주차 실습</h3>
+    <a href="/week05">빈 객체 관리 실습</a>
+    <br>
+    <h3>6주차 실습</h3>
+    <a href="/week06">빈 객체 관리 심화 실습</a>
 </body>
 </html>

@@ -8,9 +8,12 @@
 - [2주차](docs/week02/README.md)
 - [3주차](docs/week03/README.md)
 - [4주차](docs/week04/README.md)
+- [5주차](docs/week05/README.md)
+- [6주차](docs/week06/README.md)
 
 ## 프로젝트 개요
 
 - 실습 코드 위치: `src/`
 - 학습 문서 위치: `docs/`
 - 실행 환경: Spring Boot, Gradle, JSP 기반 실습 프로젝트
+- 현재 웹 실습 진입: `/week04`, `/week05`, `/week06`

@@ -2,44 +2,39 @@
 
 ## 주제
 
-4주차 실습에서는 강의자료의 DI 개념을 실제 웹 프로젝트 안에서 확인했다.  
-문서는 "새로 만든 결과"만 적는 것이 아니라, 수업 중 누적된 실습 흐름을 기준으로 정리한다.
+4주차 실습은 강의자료의 DI 개념을 현재 웹 프로젝트 안에서 실제로 확인하는 과정이다.
 
-## 실습 목표
+## 이 실습의 목적
 
-- `Lect_B.week04` 패키지를 주차별 독립 실습 공간으로 사용하기
-- Java Config 방식으로 Bean 등록하기
-- `@Component`, `@Autowired`, `@Qualifier`, `@Value`를 이용해 DI 확인하기
-- 컨트롤러에서 스프링 컨테이너의 Bean을 조회하기
-- JSP에서 주입 결과를 직접 화면으로 확인하기
+4주차 실습은 아래를 "화면으로 보이게" 만드는 것이 목표다.
+
+- 생성자 주입
+- `@Qualifier`
+- `@Value`
+- Java Config 빈 등록
+- XML 기반 주입
+- Lombok 기반 생성자 주입
+- `ApplicationContext` 조회
+
+즉 4주차는 "DI 개념을 코드로 만져 보는 주차"다.
 
 ## 관련 파일
 
 | 경로 | 역할 |
 |---|---|
-| `src/main/java/com/example/lect8/Lect8Application.java` | `Lect_B.week04` 패키지 스캔 시작점 |
-| `src/main/java/Lect_B/week04/AppConfig.java` | Java Config 기반 Bean 등록 |
-| `src/main/java/Lect_B/week04/Week04IndexController.java` | `/week04` 메인 진입 컨트롤러 |
-| `src/main/java/Lect_B/week04/DIController.java` | 4주차 DI 실습 컨트롤러 |
-| `src/main/java/Lect_B/week04/HardWorkUnit.java` | 생성자 주입, `@Qualifier`, `@Value` 실습용 Bean |
-| `src/main/java/Lect_B/week04/LombokWorkUnit.java` | Lombok 기반 생성자 주입 Bean |
-| `src/main/java/Lect_B/week04/LombokXmlService.java` | XML + Lombok 생성자 주입 실습용 클래스 |
-| `src/main/java/Lect_B/week04/WorkUnit.java` | `@Component`로 등록되는 작업 Bean |
-| `src/main/java/Lect_B/week04/SmsSender.java` | 문자 발신기 역할 클래스 |
-| `src/main/resources/application.properties` | `message.greeting` 설정값 |
-| `src/main/resources/xml/week04-beans.xml` | XML 기반 Bean, XML + Lombok 주입 설정 |
-| `src/main/webapp/index.jsp` | 루트 인덱스 |
-| `src/main/webapp/views/week04/index.jsp` | 4주차 메인 화면 |
-| `src/main/webapp/views/week04/annotattionDIView.jsp` | 어노테이션 기반 DI 결과 화면 |
-| `src/main/webapp/views/week04/configDIView.jsp` | Java Config 기반 DI 결과 화면 |
-| `src/main/webapp/views/week04/lombokDIView.jsp` | Lombok DI 결과 화면 |
-| `src/main/webapp/views/week04/beanView.jsp` | XML DI 비교 화면 |
-| `src/main/webapp/views/week04/context.jsp` | ApplicationContext 확인 화면 |
-| `src/main/webapp/views/week04/modelAndViewView.jsp` | ModelAndView 비교 화면 |
+| `src/main/java/com/example/lect8/Lect8Application.java` | `week04` 패키지 스캔 시작점 |
+| `src/main/java/Lect_B/week04/AppConfig.java` | Java Config 기반 빈 등록 |
+| `src/main/java/Lect_B/week04/Week04IndexController.java` | `/week04` 메인 진입 |
+| `src/main/java/Lect_B/week04/DIController.java` | 4주차 실습 전체 라우트 |
+| `src/main/java/Lect_B/week04/HardWorkUnit.java` | 생성자 주입, `@Qualifier`, `@Value` 실습 |
+| `src/main/java/Lect_B/week04/LombokWorkUnit.java` | Lombok 기반 생성자 주입 실습 |
+| `src/main/java/Lect_B/week04/LombokXmlService.java` | XML + Lombok 조합 실습 |
+| `src/main/java/Lect_B/week04/WorkUnit.java` | 컴포넌트 스캔 대상 빈 |
+| `src/main/java/Lect_B/week04/SmsSender.java` | DI 대상 클래스 |
+| `src/main/resources/xml/week04-beans.xml` | XML 기반 빈 설정 |
+| `src/main/webapp/views/week04/*.jsp` | 결과 화면 |
 
-## 1. 실습 구조 만들기
-
-4주차는 3주차와 별개로 관리하기 위해 별도 패키지와 JSP 폴더를 사용한다.
+## 1. 왜 `week04` 전용 패키지를 따로 만들었는가
 
 ```text
 src/main/java/Lect_B/week04/
@@ -48,424 +43,193 @@ src/main/webapp/views/week04/
 
 의미:
 
-- 주차별 코드가 섞이지 않는다
-- 이전 주차와 비교하기 쉽다
-- 실습 내용을 누적해서 관리하기 좋다
+- 주차별 실습 코드를 독립적으로 유지
+- 이전 주차와 비교 가능
+- 같은 이름의 예제라도 주차별 목적에 맞게 구성 가능
 
-## 2. `scanBasePackages` 설정
+즉 교육용 프로젝트에서 매우 좋은 구조다.
 
-루트 애플리케이션 클래스에서 `Lect_B.week04`를 스캔 대상으로 잡아야 한다.
+## 2. `AppConfig`는 무엇을 보여주나
 
-```java
-@SpringBootApplication(scanBasePackages = {"Lect_B.week04"})
-public class Lect8Application {
-}
-```
+`AppConfig`는 Java Config 실습의 중심이다.
 
-의미:
-
-- `AppConfig`
-- `DIController`
-- `WorkUnit`
-- `HardWorkUnit`
-
-같은 4주차 클래스를 스프링이 찾아 Bean으로 등록한다.
-
-## 3. Java Config로 Bean 등록
-
-`AppConfig.java`에서는 `@Bean`으로 두 가지 Bean을 등록했다.
+예:
 
 ```java
 @Bean
 public SmsSender configSms() {
     return new SmsSender();
 }
+```
 
+이 메서드는:
+
+- `SmsSender` 객체 하나를 만들고
+- `configSms`라는 이름의 빈으로 등록한다
+
+는 뜻이다.
+
+또한 컬렉션도 빈이 될 수 있다는 것을 보여 주기 위해:
+
+```java
 @Bean
 public List<String> unit() {
-    List<String> list = new ArrayList<>();
-    list.add("문자열 1");
-    list.add("문자열 2");
-    return list;
+    ...
 }
 ```
 
-의미:
+도 같이 등록한다.
 
-- `configSms`: `SmsSender` 타입 Bean
-- `unit`: `List<String>` 타입 Bean
+## 3. `HardWorkUnit`은 왜 핵심 예제인가
 
-즉 단일 객체와 컬렉션 객체를 모두 Java Config로 등록하는 예제다.
+`HardWorkUnit` 하나에 4주차 핵심 포인트가 거의 다 들어 있다.
 
-## 4. 4주차 메인 진입 구성
-
-`/week04` 주소는 별도 컨트롤러에서 처리한다.
+### 생성자 주입
 
 ```java
-@Controller
-public class Week04IndexController {
-
-    @GetMapping({"/week04", "/week04/"})
-    public String index() {
-        return "week04/index";
-    }
+public HardWorkUnit(@Qualifier("configSms") SmsSender autoSms,
+        @Qualifier("week04WorkUnit") WorkUnit workUnit) {
+    ...
 }
 ```
 
-의미:
+이 코드는:
 
-- 4주차 메인 화면을 독립적으로 열 수 있다
-- 메인 화면에는 교수님 흐름에 맞춘 3개 실습 링크가 있다
+- 필수 의존성이 생성자에 드러난다
+- 어떤 빈이 들어오는지 이름까지 명확하다
 
-- 어노테이션을 이용한 DI 예제
-- config 파일을 이용한 DI 예제
-- lombok을 이용한 DI 예제
-
-## 5. `@Component`로 Bean 등록
-
-`WorkUnit`은 어노테이션 방식으로 등록된다.
+### `@Value`
 
 ```java
-@Component("week04WorkUnit")
-public class WorkUnit {
-
-    public String getUnitName() {
-        return "Week04 WorkUnit";
-    }
+@Value("${message.greeting}")
+public void setMsg(String msg) {
+    this.msg = msg;
 }
 ```
 
-의미:
+즉 객체가 외부 설정값도 함께 주입받는다는 것을 보여 준다.
 
-- 스프링이 자동으로 Bean 등록
-- Bean 이름은 `week04WorkUnit`
+## 4. `DIController`는 무엇을 하는가
 
-## 6. 생성자 주입과 설정값 주입
+`DIController`는 단순히 URL만 연결하는 컨트롤러가 아니라,  
+4주차의 여러 DI 방식을 각각 분리해서 보여주는 교육용 컨트롤러다.
 
-`HardWorkUnit`은 4주차 DI 핵심 예제다.
+주요 라우트:
 
-```java
-@Component
-public class HardWorkUnit {
+- `/week04/annotationDI`
+- `/week04/configDI`
+- `/week04/xmlDI`
+- `/week04/lombokDI`
+- `/week04/contextDI`
 
-    private final SmsSender autoSms;
-    private final WorkUnit workUnit;
-    private String msg;
+## 5. `annotationDI` 화면은 무엇을 증명하나
 
-    @Autowired
-    public HardWorkUnit(@Qualifier("configSms") SmsSender autoSms,
-            @Qualifier("week04WorkUnit") WorkUnit workUnit) {
-        this.autoSms = autoSms;
-        this.workUnit = workUnit;
-    }
+`annotationDI`는:
 
-    @Value("${message.greeting}")
-    public void setMsg(String msg) {
-        this.msg = msg;
-    }
-}
-```
-
-실습 포인트:
-
-- `SmsSender`는 `configSms` Bean을 이름으로 선택한다
-- `WorkUnit`은 `week04WorkUnit` Bean을 주입받는다
-- `msg`는 `application.properties`에서 읽는다
-
-즉 하나의 클래스에서
-
+- `@Component`
 - 생성자 주입
 - `@Qualifier`
 - `@Value`
 
-를 동시에 확인할 수 있다.
+가 실제로 동작했다는 것을 JSP로 보여준다.
 
-## 6. `annotationDI` 요청 실습
+즉 "빈이 주입되었다"는 말을 코드뿐 아니라 결과 화면으로 확인하게 한다.
 
-컨트롤러는 `WebApplicationContext`를 주입받아 컨테이너에 접근한다.
+## 6. `configDI` 화면은 무엇을 증명하나
 
-```java
-@Autowired
-private WebApplicationContext context;
-```
+`configDI`는 Java Config로 등록한 빈을:
 
-`annotationDI` 라우트:
+- 컨테이너에서 꺼내고
+- JSP로 넘기고
+- 실제 값까지 출력할 수 있음을 보여준다
 
-```java
-@GetMapping({"/annotationDI", "/qualiftingDI", "/week04/annotationDI", "/week04/qualiftingDI"})
-public ModelAndView annotationDI() {
-    ModelAndView mav = new ModelAndView("week04/annotattionDIView");
-    HardWorkUnit work = (HardWorkUnit) context.getBean("hardWorkUnit");
-    mav.addObject("obj", work);
-    return mav;
-}
-```
+특히 `List<String>` 빈을 같이 꺼내는 부분은  
+"컬렉션도 빈이 될 수 있다"는 점을 직관적으로 이해하게 해 준다.
 
-의미:
+## 7. `xmlDI`와 `lombokDI`는 왜 필요한가
 
-- 컨테이너에서 `hardWorkUnit` Bean을 가져온다
-- JSP로 넘긴다
-- JSP에서 `sms`, `workUnit`, `msg`를 확인한다
+4주차가 단순히 최신 어노테이션 방식만 가르치는 것은 아니다.
 
-확인 주소:
+이 두 화면은:
 
-- `/annotationDI`
-- `/week04/annotationDI`
+- XML 기반 설정
+- Lombok 기반 생성자 주입
 
-## 7. `configDI` 요청 실습
+도 비교하게 해 준다.
 
-사용자가 요청한 코드 흐름을 실제 프로젝트 구조에 맞게 넣은 부분이다.
+즉 학생은 한 프로젝트 안에서:
 
-```java
-@GetMapping({"/configDI", "/week04/configDI"})
-public ModelAndView configDi(ModelAndView mav) {
-    SmsSender sms = context.getBean("configSms", SmsSender.class);
-    List<String> unit = context.getBean("unit", List.class);
+- XML
+- Java Config
+- 컴포넌트 스캔
+- Lombok
 
-    mav.addObject("obj1", sms);
-    mav.addObject("obj2", unit);
-    mav.addObject("sendResult", sms.send("010-1234-5678", "configDI 실습 실행"));
-    mav.setViewName("week04/configDIView");
-    return mav;
-}
-```
+을 모두 연결해서 볼 수 있다.
 
-이 코드에서 한 일:
+## 8. `contextDI`는 왜 넣었는가
 
-- `configSms` Bean을 꺼낸다
-- `unit` Bean을 꺼낸다
-- 두 객체를 JSP로 전달한다
-- 실행 결과 문자열도 함께 넘긴다
+`ApplicationContext`나 `WebApplicationContext`는 초보자에게 추상적으로 느껴질 수 있다.
 
-확인 주소:
-
-- `/configDI`
-- `/week04/configDI`
-
-## 8. `lombokDI` 요청 실습
-
-강의자료의 Lombok 흐름을 반영해 현재 실습에서는 두 가지를 함께 보여준다.
-
-### 8-1. 컴포넌트 스캔 + Lombok
-
-```java
-@Component
-@Getter
-public class LombokWorkUnit {
-
-    private final SmsSender configSms;
-    private final WorkUnit week04WorkUnit;
-
-    @Value("${message.greeting}")
-    private String msg;
-
-    public LombokWorkUnit(SmsSender configSms, WorkUnit week04WorkUnit) {
-        this.configSms = configSms;
-        this.week04WorkUnit = week04WorkUnit;
-    }
-}
-```
-
-의미:
-
-- Lombok은 getter 같은 반복 코드를 줄여 준다
-- 생성자는 Eclipse 실행 안정성을 위해 명시적으로 두었다
-- 스프링은 그 생성자에 Bean을 주입한다
-- `msg`는 프로퍼티 값으로 채운다
-
-### 8-2. XML + Lombok 생성자 주입
-
-```java
-@Getter
-@RequiredArgsConstructor
-public class LombokXmlService {
-
-    private final SmsSender smsSender;
-    private final long periodTime;
-}
-```
-
-```xml
-<bean id="xmlLombokService" class="Lect_B.week04.LombokXmlService">
-    <constructor-arg>
-        <ref bean="xmlSms" />
-    </constructor-arg>
-    <constructor-arg>
-        <value type="long">30000</value>
-    </constructor-arg>
-</bean>
-```
-
-이 실습은 교수님이 설명한 다음 내용을 그대로 반영한다.
-
-- `ref bean="xmlSms"`
-- `value type="long"`
-- Lombok을 활용하는 클래스에 생성자 주입
-
-컨트롤러에서는 `lombokDI` 요청 시 두 결과를 함께 화면에 전달한다.
-
-확인 주소:
-
-- `/lombokDI`
-- `/week04/lombokDI`
-
-## 9. XML 기반 DI 비교 실습
-
-PPT의 XML Bean 설정과 Java Config 비교를 실제 화면으로 확인하는 보조 실습도 추가했다.
-
-```java
-try (ClassPathXmlApplicationContext xmlContext =
-        new ClassPathXmlApplicationContext("xml/week04-beans.xml")) {
-    SmsSender xmlSms = xmlContext.getBean("week04XmlSms", SmsSender.class);
-    SmsSender configSms = context.getBean("configSms", SmsSender.class);
-}
-```
-
-확인 주소:
-
-- `/xmlDI`
-- `/week04/xmlDI`
-
-이 실습에서 결과 화면에 직접 보이는 항목:
-
-- xml 설정에 의해서 설정된, 인젝션한 객체
-- 생성자를 통한 DI된 객체
-- 생성자를 통한 DI된 기본 데이터
-- Setter를 통해 DI된 객체
-- Setter를 통한 DI된 기본 데이터
-
-## 10. ApplicationContext 확인 실습
-
-강의자료 후반부의 `ApplicationContext` 내용을 현재 프로젝트에서도 확인할 수 있게 했다.
-
-```java
-HardWorkUnit work = context.getBean("hardWorkUnit", HardWorkUnit.class);
-```
-
-확인 주소:
-
-- `/contextDI`
-- `/week04/contextDI`
-
-이 화면에서는
+그래서 `contextDI` 화면에서는:
 
 - 컨테이너 타입
-- 주입된 Bean 타입
+- 주입된 빈 타입
 - 설정값 주입 결과
 
-를 함께 본다.
+를 직접 출력해 보여 준다.
 
-## 11. ModelAndView 두 방식 비교
+이 예제의 목적은:
 
-교수님 설명대로 `ModelAndView`는 두 방식 모두 실습에 넣었다.
+> "아, 컨테이너가 진짜 존재하고 실제로 빈을 가지고 있구나"
 
-### 11-1. 직접 생성
+를 체감시키는 것이다.
 
-```java
-ModelAndView mav = new ModelAndView();
-```
+## 9. `modelAndViewNew`와 `modelAndViewParam`는 왜 비교하는가
 
-확인 주소:
+이 부분은 MVC 관점의 보강 실습이다.
 
-- `/modelAndViewNew`
-- `/week04/modelAndViewNew`
+- 하나는 `new ModelAndView()`로 직접 생성
+- 하나는 메서드 파라미터로 주입받아 사용
 
-### 11-2. 매개변수 주입
+이 차이를 통해 학생은:
 
-```java
-public ModelAndView modelAndViewParam(ModelAndView mav)
-```
+- 스프링이 어떤 객체를 자동으로 제공할 수 있는지
+- 컨트롤러 메서드 시그니처를 어떻게 설계하는지
 
-확인 주소:
+를 조금 더 감각적으로 익히게 된다.
 
-- `/modelAndViewParam`
-- `/week04/modelAndViewParam`
+## 10. 초심자가 4주차 코드를 읽는 순서
 
-이 비교를 통해 교수님이 말한
+1. `Week04IndexController`로 진입점 확인
+2. `AppConfig`에서 어떤 빈이 등록되는지 확인
+3. `WorkUnit`, `SmsSender`, `HardWorkUnit` 구조 읽기
+4. `DIController`에서 어떤 URL이 어떤 예제를 보여주는지 확인
+5. JSP에서 어떤 값이 출력되는지 비교
 
-- `new`로 직접 생성 가능
-- 매개변수로 선언하면 스프링이 넣어줌
+## 11. 이 실습에서 자주 놓치는 포인트
 
-을 코드와 화면으로 같이 확인할 수 있다.
+### 포인트 1. `@Autowired`만 중요한 것이 아니다
 
-## 12. JSP에서 확인하는 내용
+실제로는:
 
-### `annotattionDIView.jsp`
+- 어떤 타입 빈이 있는지
+- 이름이 무엇인지
+- 여러 개면 어떻게 구분할지
 
-확인 내용:
+까지 같이 봐야 한다.
 
-- `obj.sms`
-- `obj.workUnit`
-- `obj.msg`
+### 포인트 2. `@Value`도 DI의 일부다
 
-즉 어노테이션 기반으로 주입된 객체와 설정값을 바로 출력한다.
+객체만 주입받는 것이 아니라 설정값도 주입받는다.
 
-### `configDIView.jsp`
+### 포인트 3. XML은 과거 유산이 아니라 비교 학습용으로 중요하다
 
-확인 내용:
+설정 방식의 차이를 이해하면 스프링 구조 이해가 깊어진다.
 
-- `SmsSender` 객체 타입
-- 발신기 이름
-- `send()` 실행 결과
-- `List<String>` Bean의 값 목록
+## 12. 이 실습을 끝내면 말할 수 있어야 하는 것
 
-즉 Java Config 방식으로 등록된 Bean을 웹 화면에서 직접 확인하는 예제다.
-
-### `lombokDIView.jsp`
-
-확인 내용:
-
-- 컴포넌트 스캔 + Lombok 결과
-- XML + Lombok 생성자 주입 결과
-- `periodTime = 30000`
-- `xmlSms`가 실제 주입된 실행 결과
-
-즉 Lombok 실습을 한 가지 방식으로만 끝내지 않고, 강의자료 흐름대로 XML과 연결된 버전까지 확인한다.
-
-## 13. 루트 인덱스와 4주차 화면 연결
-
-루트 `index.jsp`에서 4주차 실습 진입 링크를 추가했다.
-
-```jsp
-<a href="/week04">DI 실습</a>
-```
-
-또 `views/week04/index.jsp`에서는 4주차 내부 링크를 정리했다.
-
-- `/week04/annotationDI`
-- `/week04/configDI`
-- `/week04/lombokDI`
-
-즉 루트에서 4주차 실습으로 진입하고, 4주차 내부에서 실습별 화면으로 이동하는 흐름이다.
-
-## 14. 강의자료와 현재 실습의 연결
-
-PPT에서 배운 내용과 현재 실습의 대응은 아래처럼 이해하면 된다.
-
-| 강의자료 개념 | 현재 실습에서 대응되는 부분 |
-|---|---|
-| Java Config Bean 등록 | `AppConfig`의 `configSms()`, `unit()` |
-| 컴포넌트 스캔 | `@Component`가 붙은 `WorkUnit`, `HardWorkUnit` |
-| Lombok DI | `LombokWorkUnit`, `LombokXmlService` |
-| `@Autowired` | `HardWorkUnit` 생성자, `DIController`의 `context` |
-| `@Qualifier` | `HardWorkUnit` 생성자의 `configSms`, `week04WorkUnit` |
-| `@Value` | `setMsg()` |
-| XML 생성자 주입 | `week04-beans.xml`의 `<ref bean=\"xmlSms\" />`, `<value type=\"long\">30000</value>` |
-| 컨테이너에서 Bean 가져오기 | `context.getBean(...)` |
-| 뷰로 결과 전달 | `ModelAndView` + JSP |
-| ApplicationContext 사용 | `contextDI` |
-| ModelAndView 두 방식 | `modelAndViewNew`, `modelAndViewParam` |
-
-즉 현재 프로젝트는 강의자료의 모든 범위를 한 번에 구현한 것은 아니지만,
-PPT 핵심 개념을 실습 코드로 확인할 수 있는 중심 예제는 대부분 연결된 상태다.
-
-## 15. 이번 주차에서 기억할 점
-
-- 4주차는 DI 개념을 실제 코드로 연결하기 시작하는 주차다
-- `@Bean`과 `@Component`는 Bean 등록 방식이 다르다
-- `@Autowired`는 타입 기준 주입이다
-- 같은 타입이 여러 개이면 `@Qualifier`가 필요하다
-- 설정값은 `@Value`로 따로 주입한다
-- XML에서는 `<ref>`로 객체를, `<value type=\"long\">`로 기본 타입 값을 넣을 수 있다
-- Lombok은 생성자 주입 코드를 줄여 주며 XML과도 결합할 수 있다
-- 컨트롤러는 컨테이너의 Bean을 꺼내 `ModelAndView`로 JSP에 전달할 수 있다
+- 생성자 주입이 왜 좋은가
+- `@Qualifier`가 왜 필요한가
+- Java Config와 XML은 무엇이 같은 목적을 가지는가
+- `@Value`는 어디서 값을 가져오는가
+- 컨트롤러가 빈과 설정값을 화면에 어떻게 전달하는가

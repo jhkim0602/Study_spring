@@ -2,210 +2,155 @@
 
 ## 주제
 
-4주차 강의자료를 기준으로 스프링의 DI를 이론적으로 정리한다.
+4주차는 DI를 실제로 사용하는 방법을 이론적으로 정리하는 주차다.
+
+## 이 문서를 읽기 전에
+
+3주차에서:
+
+- 빈이 무엇인지
+- 컨테이너가 무엇인지
+- DI가 왜 필요한지
+
+를 이해했다고 가정한다.
+
+4주차에서는 그 위에:
+
+- 어떤 방식으로 주입하는가
+- 여러 빈 중 하나를 어떻게 고르는가
+- 설정값은 어떻게 넣는가
+- 컬렉션은 어떻게 주입하는가
+
+를 다룬다.
 
 ## 목차
 
-- [1. 4주차 큰 흐름](#1-4주차-큰-흐름)
-- [2. Bean 설정 방법 3가지](#2-bean-설정-방법-3가지)
-- [3. 스프링 컨테이너](#3-스프링-컨테이너)
-- [4. DI가 필요한 이유](#4-di가-필요한-이유)
-- [5. DI 방식 3가지](#5-di-방식-3가지)
-- [6. 어노테이션 기반 DI](#6-어노테이션-기반-di)
-- [7. Java Config 기반 DI](#7-java-config-기반-di)
+- [1. 4주차의 핵심 질문](#1-4주차의-핵심-질문)
+- [2. Bean 설정 방법 3가지 복습](#2-bean-설정-방법-3가지-복습)
+- [3. DI 방식 3가지](#3-di-방식-3가지)
+- [4. `@Autowired`의 동작 원리](#4-autowired의-동작-원리)
+- [5. `@Qualifier`가 왜 필요한가](#5-qualifier가-왜-필요한가)
+- [6. `@Value`는 무엇을 주입하는가](#6-value는-무엇을-주입하는가)
+- [7. Java Config, XML, 컴포넌트 스캔의 관계](#7-java-config-xml-컴포넌트-스캔의-관계)
 - [8. Lombok과 생성자 주입](#8-lombok과-생성자-주입)
-- [9. XML 기반 DI](#9-xml-기반-di)
-- [10. 자동 의존 관계 설정과 설정 재사용](#10-자동-의존-관계-설정과-설정-재사용)
-- [11. 컬렉션 타입 주입](#11-컬렉션-타입-주입)
-- [12. ApplicationContext 사용 방식 비교](#12-applicationcontext-사용-방식-비교)
-- [13. 시험 대비 핵심 정리](#13-시험-대비-핵심-정리)
+- [9. 컬렉션 주입이 가능한 이유](#9-컬렉션-주입이-가능한-이유)
+- [10. ApplicationContext는 왜 직접 쓰는가](#10-applicationcontext는-왜-직접-쓰는가)
+- [11. 자주 헷갈리는 질문](#11-자주-헷갈리는-질문)
+- [12. 시험 대비 핵심 정리](#12-시험-대비-핵심-정리)
 
-## 1. 4주차 큰 흐름
+## 1. 4주차의 핵심 질문
 
-4주차 PPT의 흐름은 단순히 어노테이션 몇 개를 외우는 것이 아니다.
+4주차를 한 문장으로 요약하면:
 
-핵심 질문은 이렇다.
+> "스프링이 관리하는 빈을 실제 코드에서 어떻게 연결하고 구분해서 사용할 것인가?"
 
-- 객체를 스프링이 어떻게 관리하는가
-- 객체 사이의 의존 관계를 어떻게 연결하는가
-- XML, Java Config, 컴포넌트 스캔 방식이 어떻게 이어지는가
-- 웹 프로젝트에서 이 객체들을 어떻게 확인하는가
+이다.
 
-한 줄로 요약하면:
+3주차가 "빈을 등록하고 컨테이너에 넣는다"였다면,
+4주차는 "그 빈을 실제 클래스에 주입해 사용한다"는 단계다.
 
-> 4주차는 "Bean 등록"에서 끝나지 않고 "등록된 Bean을 주입하고 사용하는 것"까지 이해하는 주차다.
+## 2. Bean 설정 방법 3가지 복습
 
-## 2. Bean 설정 방법 3가지
+4주차에서도 여전히 등록 방식 3가지를 같이 본다.
 
-PPT에서는 Bean 설정 방법을 3가지로 구분했다.
+### 2-1. XML 등록
 
-### 2-1. XML 기반 설정
+- 외부 XML 파일에 `<bean>` 작성
+- 레거시 프로젝트나 교육용 비교에 자주 등장
 
-XML 파일의 `<bean>` 태그로 Bean을 등록하는 방식이다.
+### 2-2. Java Config 등록
 
-```xml
-<bean id="xmlSms" class="Lect_B.week03.SmsSender" />
-```
+- `@Configuration` + `@Bean`
+- 현재 많이 사용하는 자바 기반 설정 방식
 
-특징:
+### 2-3. 컴포넌트 스캔 등록
 
-- 코드와 설정이 분리된다
-- 설정을 외부 파일에서 한눈에 볼 수 있다
-- 설정이 많아지면 XML이 길고 복잡해질 수 있다
+- `@Component`, `@Controller`, `@Service`
+- 자동 등록
 
-### 2-2. Java Config 기반 설정
+중요한 점:
 
-`@Configuration`, `@Bean`을 이용해 자바 코드로 Bean을 등록하는 방식이다.
+등록 방식은 다르지만,  
+결국 컨테이너가 관리하는 빈이 된다는 점은 같다.
 
-```java
-@Configuration
-public class AppConfig {
+## 3. DI 방식 3가지
 
-    @Bean
-    public SmsSender configSms() {
-        return new SmsSender();
-    }
-}
-```
-
-특징:
-
-- XML보다 간결하다
-- 설정과 코드가 가까이 있어 읽기 쉽다
-- 현재 실습 코드도 이 방식을 사용한다
-
-### 2-3. 컴포넌트 기반 설정
-
-`@Component`, `@Controller`, `@Service`, `@Repository`가 붙은 클래스를 자동으로 찾아 등록하는 방식이다.
-
-```java
-@Component
-public class WorkUnit {
-}
-```
-
-특징:
-
-- 개발 생산성이 높다
-- `@ComponentScan` 또는 부트의 컴포넌트 스캔이 필요하다
-
-## 3. 스프링 컨테이너
-
-PPT에서는 컨테이너를 Bean을 담고 관리하는 공간으로 설명했다.
-
-주요 역할:
-
-- Bean 생성
-- Bean 보관
-- 의존 관계 연결
-- 생명주기 관리
-
-대표 인터페이스:
-
-- `BeanFactory`
-- `ApplicationContext`
-- `WebApplicationContext`
-
-실습에서는 컨트롤러에서 `WebApplicationContext`를 주입받아 `getBean()`으로 Bean을 확인한다.
-
-## 4. DI가 필요한 이유
-
-객체가 다른 객체를 직접 `new`로 만들면 결합도가 높아진다.
-
-예:
-
-```java
-public class Car {
-    private Engine engine;
-
-    public Car() {
-        this.engine = new Engine();
-    }
-}
-```
-
-문제:
-
-- 구현이 바뀌면 코드를 수정해야 한다
-- 테스트가 어렵다
-- 객체 관계가 복잡해질수록 관리가 힘들다
-
-그래서 스프링은 필요한 객체를 외부에서 주입한다.
-
-이것이 DI다.
-
-## 5. DI 방식 3가지
-
-PPT에서 정리한 DI 방식은 아래와 같다.
-
-### 5-1. 필드 주입
+### 3-1. 필드 주입
 
 ```java
 @Autowired
 private SmsSender smsSender;
 ```
 
-특징:
+장점:
 
 - 코드가 짧다
-- 의존성이 필드 안에 숨어 있어 구조 파악이 어렵다
 
-### 5-2. 생성자 주입
+단점:
+
+- 객체가 어떤 의존성을 꼭 필요로 하는지 생성자만 봐서는 알기 어렵다
+- 테스트 작성이 불편하다
+
+### 3-2. 생성자 주입
 
 ```java
-@Autowired
 public HardWorkUnit(SmsSender smsSender, WorkUnit workUnit) {
     this.smsSender = smsSender;
     this.workUnit = workUnit;
 }
 ```
 
-특징:
+장점:
 
 - 필수 의존성이 명확하다
+- 불변 구조를 만들기 좋다
 - 실무에서 가장 권장된다
 
-### 5-3. Setter 주입
+### 3-3. Setter 주입
 
 ```java
-@Value("${message.greeting}")
 public void setMsg(String msg) {
     this.msg = msg;
 }
 ```
 
-특징:
+주로:
 
-- 선택적인 값 주입에 적합하다
-- 실습에서는 설정값 주입 예제로 사용한다
+- 선택적인 의존성
+- 외부 설정값
 
-## 6. 어노테이션 기반 DI
+에 자주 쓴다.
 
-PPT에서 가장 강조한 부분 중 하나다.
+## 4. `@Autowired`의 동작 원리
 
-핵심 어노테이션:
+기본적으로 `@Autowired`는 **타입 기준**으로 빈을 찾는다.
 
-- `@Component`
-- `@Controller`
-- `@Autowired`
-- `@Qualifier`
-- `@Value`
-
-### `@Autowired`
-
-기본적으로 타입 기준으로 Bean을 찾아 주입한다.
-
-주의:
-
-- 해당 타입 Bean이 없으면 예외
-- 같은 타입 Bean이 여러 개 있어도 예외
-
-### `@Qualifier`
-
-같은 타입 Bean이 2개 이상일 때 이름으로 특정 Bean을 고른다.
+예:
 
 ```java
 @Autowired
+private SmsSender smsSender;
+```
+
+스프링은 "현재 컨테이너에 `SmsSender` 타입 빈이 있는가?"를 본다.
+
+### 주의 1. 해당 타입 빈이 없으면?
+
+주입 실패 예외가 난다.
+
+### 주의 2. 같은 타입 빈이 여러 개면?
+
+어느 것을 넣어야 할지 모호해서 역시 문제가 생긴다.
+
+그래서 `@Qualifier`가 필요해진다.
+
+## 5. `@Qualifier`가 왜 필요한가
+
+같은 타입 빈이 여러 개 있을 때 특정 빈을 고르기 위한 장치다.
+
+예:
+
+```java
 public HardWorkUnit(@Qualifier("configSms") SmsSender autoSms,
         @Qualifier("week04WorkUnit") WorkUnit workUnit) {
     this.autoSms = autoSms;
@@ -213,256 +158,146 @@ public HardWorkUnit(@Qualifier("configSms") SmsSender autoSms,
 }
 ```
 
-### `@Value`
+이 코드는:
 
-프로퍼티 값을 주입한다.
+- `SmsSender` 타입 빈 중 `configSms`
+- `WorkUnit` 타입 빈 중 `week04WorkUnit`
+
+을 정확히 지정한다.
+
+쉽게 말하면:
+
+- `@Autowired` = 타입으로 찾기
+- `@Qualifier` = 이름으로 더 구체화하기
+
+다.
+
+## 6. `@Value`는 무엇을 주입하는가
+
+`@Value`는 보통 빈 객체가 아니라 **설정값**을 주입한다.
+
+예:
 
 ```java
 @Value("${message.greeting}")
-public void setMsg(String msg) {
-    this.msg = msg;
-}
+private String msg;
 ```
 
-## 7. Java Config 기반 DI
+뜻:
 
-PPT에서는 `@Configuration` 클래스와 `@Bean` 메서드로 설정하는 방식을 따로 다뤘다.
+- 프로퍼티 파일에 있는 `message.greeting` 값을 읽어
+- `msg` 필드에 넣어라
 
-현재 실습 코드도 이 방식을 사용한다.
+왜 필요한가:
 
-```java
-@Configuration
-public class AppConfig {
+- 문자열, 포트 번호, 메시지 같은 값은 코드 안에 박아두기보다
+- 설정 파일로 빼는 것이 관리와 변경에 유리하기 때문이다
 
-    @Bean
-    public SmsSender configSms() {
-        return new SmsSender();
-    }
+## 7. Java Config, XML, 컴포넌트 스캔의 관계
 
-    @Bean
-    public List<String> unit() {
-        List<String> list = new ArrayList<>();
-        list.add("문자열 1");
-        list.add("문자열 2");
-        return list;
-    }
-}
-```
+초보자가 자주 헷갈리는 부분:
 
-포인트:
+> "세 가지 방식 중 하나만 써야 하나요?"
 
-- 메서드 이름이 기본 Bean 이름이 된다
-- 반환 타입이 Bean 타입이 된다
-- 단순 객체뿐 아니라 `List<String>` 같은 컬렉션도 Bean으로 등록할 수 있다
+꼭 그렇지 않다.
+
+현재 프로젝트도 섞어서 사용한다.
+
+이유:
+
+- 교육용 비교가 필요하다
+- 주차별 실습 목적이 다르다
+- 실제 프로젝트도 상황에 따라 여러 방식을 혼합할 수 있다
+
+즉 중요한 것은 "어떤 방식이냐"보다  
+"결국 스프링이 관리하는 빈이 되었는가"다.
 
 ## 8. Lombok과 생성자 주입
 
-PPT에서는 Lombok의 `@RequiredArgsConstructor`도 소개했다.
+Lombok은 반복 코드를 줄여주는 도구다.
 
-핵심:
+4주차에서 중요한 포인트는:
 
-- `final` 필드를 기반으로 생성자를 자동 생성
-- 생성자 주입 코드가 짧아진다
-- 스프링 4.3 이후에는 생성자가 하나면 `@Autowired` 생략 가능
+- 생성자 주입이 좋은 방식인데
+- 필드가 많아지면 생성자를 매번 쓰는 게 번거롭다
 
-현재 실습 코드에서는 Lombok을 사용하되, Eclipse 실행 안정성을 위해 생성자는 명시적으로 두고 `@Getter` 중심으로 활용한다.
+는 점이다.
 
-### 8-1. 컴포넌트 스캔 + Lombok
+그래서 Lombok의:
 
-```java
-@Component
-@Getter
-public class LombokWorkUnit {
+- `@Getter`
+- `@RequiredArgsConstructor`
 
-    private final SmsSender configSms;
-    private final WorkUnit week04WorkUnit;
+같은 기능을 사용하면 코드가 더 간결해진다.
 
-    @Value("${message.greeting}")
-    private String msg;
-    public LombokWorkUnit(SmsSender configSms, WorkUnit week04WorkUnit) {
-        this.configSms = configSms;
-        this.week04WorkUnit = week04WorkUnit;
-    }
-}
-```
+하지만 중요한 것은 Lombok 자체가 아니라,  
+**생성자 주입 구조를 더 쉽게 유지하게 해 준다**는 점이다.
 
-의미:
+## 9. 컬렉션 주입이 가능한 이유
 
-- `final` 필드를 기준으로 생성자가 자동 생성된다
-- 스프링은 그 생성자를 이용해 Bean을 주입한다
-- Lombok을 사용해 생성자 코드를 직접 쓰지 않아도 된다
+스프링은 단일 객체만 주입하는 것이 아니다.
 
-### 8-2. XML + Lombok 생성자 주입
+예를 들어:
 
-강의자료에서 말한 흐름대로 XML에서 인젝션 정보를 쓰고, 클래스는 Lombok으로 생성자를 준비하는 구조도 가능하다.
+- `List<String>`
+- `List<Animal>`
+- `Map<String, Animal>`
 
-```java
-@Getter
-@RequiredArgsConstructor
-public class LombokXmlService {
+도 빈이 될 수 있고, 주입될 수 있다.
 
-    private final SmsSender smsSender;
-    private final long periodTime;
-}
-```
+왜 유용한가:
 
-```xml
-<bean id="xmlLombokService" class="Lect_B.week04.LombokXmlService">
-    <constructor-arg>
-        <ref bean="xmlSms" />
-    </constructor-arg>
-    <constructor-arg>
-        <value type="long">30000</value>
-    </constructor-arg>
-</bean>
-```
+- 여러 구현체를 한 번에 다루기 좋다
+- 순서나 이름을 기준으로 묶어서 관리하기 좋다
 
-의미:
+즉 스프링은 "객체 하나"만 관리하는 프레임워크가 아니라  
+"객체 집합"도 다루는 프레임워크다.
 
-- Lombok이 `SmsSender`, `long` 파라미터 생성자를 만든다
-- XML이 그 생성자에 들어갈 값을 제공한다
-- `<ref bean="xmlSms" />`는 Bean 객체 주입
-- `<value type="long">30000</value>`는 기본값 주입
+## 10. ApplicationContext는 왜 직접 쓰는가
 
-## 9. XML 기반 DI
+실무에서는 보통 필요한 빈을 직접 주입받는 편이 더 낫다.
 
-PPT에서는 XML에서도 생성자 주입과 Setter 주입을 할 수 있다고 설명했다.
+하지만 교육용 실습에서 `ApplicationContext`를 직접 쓰는 이유는:
 
-### 생성자 주입
+- 컨테이너가 실제로 존재한다는 것을 체감하게 하고
+- `getBean()` 동작을 눈으로 확인시키며
+- 등록 방식 비교를 쉽게 하기 위해서다
 
-```xml
-<bean name="service" class="com.Lect.Service.LombokService">
-    <constructor-arg>
-        <ref bean="xmlSms" />
-    </constructor-arg>
-</bean>
-```
+즉 학습용으로는 좋은데,  
+실무에서는 무조건 컨텍스트를 직접 뒤지는 방식보다 DI를 우선한다.
 
-### Setter 주입
+## 11. 자주 헷갈리는 질문
 
-```xml
-<bean name="service" class="com.Lect.Service.LombokService">
-    <property name="msg">
-        <value>롬복을 활용하는 클래스를 사용!!</value>
-    </property>
-</bean>
-```
+### Q1. `@Autowired`가 있으면 왜 생성자도 써야 하나?
 
-실습에서는 XML 생성자 주입을 아래처럼 구체적으로 확인했다.
+생성자 주입은 어떤 의존성이 필수인지 구조를 드러내기 때문이다.
 
-```xml
-<bean id="xmlSms" class="Lect_B.week04.SmsSender">
-    <constructor-arg value="XML 주입용 SMS 발신기" />
-</bean>
+### Q2. `@Value`도 DI인가?
 
-<bean id="xmlLombokService" class="Lect_B.week04.LombokXmlService">
-    <constructor-arg>
-        <ref bean="xmlSms" />
-    </constructor-arg>
-    <constructor-arg>
-        <value type="long">30000</value>
-    </constructor-arg>
-</bean>
-```
+넓은 의미에서는 그렇다.  
+객체가 아니라 설정값을 주입하는 DI라고 볼 수 있다.
 
-이 구조는 강의자료의 다음 두 포인트를 그대로 보여준다.
+### Q3. 같은 타입 빈이 둘 이상이면 무조건 에러인가?
 
-- 객체 타입은 `<ref>`로 주입
-- 기본 타입 값은 `<value type="long">`처럼 타입을 명시해 주입
+그 상태에서 스프링이 어느 빈을 넣어야 할지 결정할 수 없으면 에러가 난다.  
+그래서 `@Qualifier`나 `@Primary`가 필요하다.
 
-실습에서는 XML 주입 결과 화면에서 아래 항목을 직접 확인하도록 구성했다.
+### Q4. XML 방식은 요즘 안 쓰나?
 
-- xml 설정에 의해서 설정된, 인젝션한 객체
-- 생성자를 통한 DI된 객체
-- 생성자를 통한 DI된 기본 데이터
-- Setter를 통해 DI된 객체
-- Setter를 통한 DI된 기본 데이터
+과거보다 적게 쓰지만,
 
-즉 XML이든 Java Config든 본질은 같다.
+- 레거시 시스템
+- 기존 설정 자산
+- 교육용 비교
 
-- 객체를 만들고
-- 의존성을 연결하고
-- 컨테이너가 관리한다
+에서는 여전히 중요하다.
 
-## 10. 자동 의존 관계 설정과 설정 재사용
+## 12. 시험 대비 핵심 정리
 
-PPT에는 XML의 자동 연결 방식도 나왔다.
-
-- `byName`
-- `byType`
-- `constructor`
-
-또 부모 Bean을 정의해 공통 설정을 재사용하는 방식도 소개됐다.
-
-핵심 메시지:
-
-- 설정이 많아질수록 중복을 줄이는 전략이 필요하다
-- 스프링은 자동 연결과 부모 Bean 재사용 기능을 제공한다
-
-## 11. 컬렉션 타입 주입
-
-4주차 PPT의 후반부에서는 컬렉션 주입도 다뤘다.
-
-- `List`
-- `Map`
-- `Set`
-- `Properties`
-
-실습 코드의 `unit()` Bean은 이 개념의 가장 단순한 버전이다.
-
-```java
-@Bean
-public List<String> unit() {
-    List<String> list = new ArrayList<>();
-    list.add("문자열 1");
-    list.add("문자열 2");
-    return list;
-}
-```
-
-즉 컬렉션도 스프링 컨테이너가 Bean으로 관리할 수 있다.
-
-## 12. ApplicationContext 사용 방식 비교
-
-PPT 마지막 부분에서는 두 방식을 비교했다.
-
-### `@Autowired`로 주입받은 컨테이너
-
-- 스프링 부트가 만든 표준 컨테이너
-- 애플리케이션 전체에서 공유
-- 일반적인 애플리케이션 개발에서 권장
-
-### `new AnnotationConfigApplicationContext(...)`
-
-- 개발자가 별도 컨테이너를 직접 생성
-- 독립 테스트나 특수 목적에 유용
-- 기존 컨텍스트와 별개로 동작할 수 있다
-
-현재 실습은 `WebApplicationContext`를 주입받는 표준 방식에 가깝다.
-
-```java
-@Autowired
-private WebApplicationContext context;
-```
-
-그리고 `contextDI` 실습에서는 이 컨테이너에서 Bean을 직접 꺼내 화면으로 넘긴다.
-
-```java
-HardWorkUnit work = context.getBean("hardWorkUnit", HardWorkUnit.class);
-```
-
-즉 이론에서 말한 "주입된 컨테이너를 활용하는 방식"을 현재 프로젝트에서 바로 확인할 수 있다.
-
-## 13. 시험 대비 핵심 정리
-
-- Bean 설정 방식은 XML, Java Config, 컴포넌트 스캔 3가지로 정리한다
-- 스프링 컨테이너는 Bean 생성, 관리, 의존 관계 연결을 담당한다
-- DI 방식은 필드 주입, 생성자 주입, Setter 주입 3가지다
-- `@Autowired`는 타입 기준 주입이다
-- 같은 타입 Bean이 여러 개면 `@Qualifier`가 필요하다
-- `@Value`는 프로퍼티 값을 주입할 때 사용한다
-- Java Config에서는 `@Bean` 메서드 이름이 기본 Bean 이름이다
-- XML 생성자 주입에서는 `<ref>`로 Bean을, `<value type=\"long\">`로 기본값을 넣을 수 있다
-- Lombok은 생성자 주입 코드를 줄여 주며 XML 주입과도 함께 사용할 수 있다
-- XML에서도 생성자 주입, Setter 주입, 자동 연결, 부모 Bean 재사용, 컬렉션 주입이 가능하다
-- `ApplicationContext`는 컨테이너의 대표 인터페이스다
+- DI 방식은 필드, 생성자, setter 주입이 있다.
+- 실무에서는 생성자 주입이 가장 권장된다.
+- `@Autowired`는 타입 기준 주입이다.
+- 같은 타입 빈이 여러 개면 `@Qualifier`가 필요하다.
+- `@Value`는 프로퍼티 값을 주입한다.
+- XML, Java Config, 컴포넌트 스캔은 모두 빈 등록 방식이다.
+- 컬렉션도 빈으로 등록하고 주입할 수 있다.

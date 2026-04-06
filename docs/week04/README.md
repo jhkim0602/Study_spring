@@ -2,28 +2,51 @@
 
 ## 주제
 
-4주차는 DI(Dependency Injection)를 본격적으로 다루는 주차다.  
-강의자료에서는 스프링 컨테이너, Bean 설정 방식, DI 방식, `@Autowired`, `@Qualifier`, `@Value`, Java Config, XML 설정, 컬렉션 주입까지 넓게 다루고,  
-실습에서는 `Lect_B.week04` 패키지에서 Java Config와 어노테이션 기반 DI를 웹 요청으로 확인하는 흐름을 구성했다.
+4주차는 **DI를 실제 코드에서 어떻게 다루는가**를 배우는 주차다.  
+3주차가 "빈과 컨테이너의 존재를 이해하는 단계"였다면, 4주차는 "그 빈을 실제로 주입하고 구분하고 사용해 보는 단계"다.
+
+## 이 주차가 왜 중요한가
+
+실무에서 스프링을 쓴다고 할 때 가장 자주 보는 문법이 바로:
+
+- `@Autowired`
+- `@Qualifier`
+- `@Value`
+- `@Configuration`
+- `@Bean`
+
+이다.
+
+즉 4주차는 "스프링다운 코드"가 어떤 코드인지 처음 체감하는 주차라고 볼 수 있다.
+
+## 선수 개념
+
+- [용어 사전](../glossary.md)
+- [공통 기초 문서](../foundation.md)
+- [프로젝트 구조 해설](../project-structure.md)
+- [3주차](../week03/README.md)의 Bean / DI / 컨테이너 개념
 
 ## 문서 구성
 
-- [실습 문서](practice.md)
 - [이론 문서](theory.md)
+- [실습 문서](practice.md)
+
+## 이 주차에서 꼭 잡아야 하는 질문
+
+- DI 방식은 왜 여러 가지가 있는가?
+- `@Autowired`는 어떤 기준으로 빈을 찾는가?
+- 같은 타입 빈이 여러 개면 왜 `@Qualifier`가 필요한가?
+- 설정값은 왜 `application.properties` 밖으로 빼는가?
+- 컬렉션도 왜 빈으로 주입할 수 있는가?
+
+## 추천 읽기 순서
+
+1. `theory.md`에서 DI 방식과 어노테이션 정리
+2. `practice.md`에서 `/week04` 실습 구조 확인
+3. `HardWorkUnit`, `LombokWorkUnit`, `DIController` 코드 읽기
 
 ## 빠른 요약
 
-- 3주차가 "Bean과 컨테이너가 무엇인가"에 가까웠다면, 4주차는 "DI를 실제로 어떻게 쓰는가"에 가깝다.
-- 강의자료 기준 핵심 범위는 Bean 설정 3방식, DI 3방식, `@Autowired`, `@Qualifier`, `@Value`, Java Config, XML 주입, 컬렉션 주입이다.
-- 현재 프로젝트 실습은 `AppConfig`, `DIController`, `HardWorkUnit`, `WorkUnit`, `SmsSender`, JSP 화면을 중심으로 구성되어 있다.
-- 실습 라우트는 `/annotationDI`, `/configDI`이며, 각각 어노테이션 기반 DI와 Java Config 기반 Bean 조회를 확인한다.
-
-## 이번 주차를 보는 관점
-
-4주차 문서는 "새로 만든 최종본"만 기록하는 문서가 아니라,  
-강의에서 배운 이론과 그 이론을 바탕으로 실습하면서 쌓인 내용을 함께 누적하는 문서다.
-
-즉 아래 두 축을 같이 본다.
-
-- 강의자료에서 배운 DI 이론 정리
-- 현재 프로젝트에서 직접 확인한 실습 정리
+- 4주차는 DI를 "정의"가 아니라 "사용법"으로 배우는 주차다.
+- 같은 타입 빈이 여러 개일 때의 구분법까지 포함해 실전적인 DI를 본다.
+- Java Config, XML, 어노테이션 방식을 한 프로젝트 안에서 비교한다.

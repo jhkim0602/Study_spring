@@ -2,133 +2,192 @@
 
 ## 주제
 
-사용자가 제공한 `6주` 실습 폴더를 현재 `lect_B` 프로젝트 구조에 맞게 재작성한 기록이다.  
-이번 주차는 원본 실습 코드가 이미 `scope`, `lifecycle`, `aware`, `external properties`에 집중되어 있어서, 5주차보다 더 교수님 예제 파일명 중심으로 옮겼다.
+6주차 실습은 제공된 `BeanScopeConfig`, `BeanScopeController`, `InitDestroyUnit`, `AwareInterfaceImp`, `ExternalConfigComponent` 흐름을 현재 프로젝트 구조에 맞게 재작성한 것이다.
 
-## 재작성 원칙
+## 이 실습의 목적
 
-- 원본 클래스명 흐름은 유지한다.
-- 기존 `week05`와 충돌하지 않도록 `week06` 전용 패키지와 빈 이름을 사용한다.
-- 라우트는 `/week06/...` 형태로 통일한다.
-- 원본에 없던 lifecycle 화면만 보강해서 콘솔이 아니라 JSP에서도 순서를 확인할 수 있게 했다.
+6주차 실습은 5주차 개념을 다시 반복하는 것이 아니라,
+
+- 교수님 예제 코드 스타일로 다시 보고
+- 같은 개념을 다른 파일 구조에서 읽어 보고
+- 실제 결과 화면으로 비교하게 만드는
+
+목적을 가진다.
+
+즉 6주차는 "이해 고정"용 실습이다.
 
 ## 관련 파일
 
 | 경로 | 역할 |
 |---|---|
-| `src/main/java/Lect_B/week06/BeanScopeConfig.java` | 스코프 예제용 빈 등록 |
-| `src/main/java/Lect_B/week06/BeanScopeController.java` | 6주차 실습 라우트 |
-| `src/main/java/Lect_B/week06/InitDestroyUnit.java` | 라이프사이클 훅 실습 |
-| `src/main/java/Lect_B/week06/LifeCycleConfig.java` | `initMethod`, `destroyMethod` 설정 |
-| `src/main/java/Lect_B/week06/AwareInterfaceImp.java` | `BeanNameAware`, `ApplicationContextAware` 실습 |
-| `src/main/java/Lect_B/week06/ExternalConfigComponent.java` | 외부 프로퍼티 매핑 |
-| `src/main/java/Lect_B/week06/Week06SmsSender.java` | 스코프 비교용 객체 |
+| `src/main/java/Lect_B/week06/BeanScopeConfig.java` | 스코프별 빈 등록 |
+| `src/main/java/Lect_B/week06/BeanScopeController.java` | 6주차 라우트 제어 |
+| `src/main/java/Lect_B/week06/Week06SmsSender.java` | 스코프 비교용 간단한 객체 |
 | `src/main/java/Lect_B/week06/Week06WorkUnit.java` | prototype 작업 객체 |
 | `src/main/java/Lect_B/week06/Week06DifferentScopeClient.java` | singleton 내부 직접 주입 예제 |
 | `src/main/java/Lect_B/week06/Week06ObjectFactoryClient.java` | `ObjectFactory` 해결 예제 |
-| `src/main/resources/week06-external.properties` | 6주차 외부 설정 파일 |
-| `src/main/webapp/views/week06/*.jsp` | 6주차 화면 |
+| `src/main/java/Lect_B/week06/InitDestroyUnit.java` | 라이프사이클 훅 실습 |
+| `src/main/java/Lect_B/week06/LifeCycleConfig.java` | init/destroy 설정 |
+| `src/main/java/Lect_B/week06/AwareInterfaceImp.java` | Aware 인터페이스 예제 |
+| `src/main/java/Lect_B/week06/ExternalConfigComponent.java` | 외부 프로퍼티 읽기 |
+| `src/main/resources/week06-external.properties` | 6주차 설정 파일 |
+| `src/main/webapp/views/week06/*.jsp` | 결과 화면 |
 
-## 1. 빈 범위 설정 예제
+## 1. `BeanScopeConfig`는 왜 중요한가
 
-원본 `BeanScopeConfig`의 핵심은 같은 타입 빈을 서로 다른 범위로 등록하는 것이다.
+이 클래스는 6주차 전체의 출발점이다.
 
-현재 프로젝트에서는 아래 4개 빈을 만들었다.
+여기서:
 
-- `week06ScopeBean0`: singleton
-- `week06ScopeBean1`: prototype
-- `week06ScopeBean2`: request
-- `week06ScopeBean3`: session
+- singleton 빈
+- prototype 빈
+- request 빈
+- session 빈
 
-`/week06/scopeBean`에서 각 빈을 한 요청 안에서 두 번 조회해 같은 객체인지 비교한다.
+을 모두 등록한다.
 
-정리:
+즉 학생은 한 파일 안에서 "같은 타입의 객체라도 범위를 다르게 줄 수 있다"는 것을 확인할 수 있다.
 
-- singleton: 두 번 조회해도 같다
-- prototype: 두 번 조회하면 다르다
-- request: 같은 요청 안에서는 같다
-- session: 같은 세션 안에서는 같다
+## 2. `/week06/scopeBean` 화면은 어떻게 읽어야 하는가
 
-## 2. 서로 다른 범위 빈 사용
+이 화면은 각 스코프를 한 요청 안에서 두 번 조회한 결과를 보여 준다.
 
-원본 `useDifferentScope` 예제는 singleton이 prototype을 직접 의존할 때 문제를 보여준다.
+읽는 법:
 
-현재 프로젝트에서는 `Week06DifferentScopeClient`가 singleton이고, 생성 시점에 prototype `Week06WorkUnit` 하나를 주입받는다.
+- singleton: 두 출력이 같아야 정상
+- prototype: 두 출력이 달라야 정상
+- request: 같은 요청 안에서는 같아야 정상
+- session: 같은 세션 안에서는 같아야 정상
 
-`/week06/useDifferentScope`에서 같은 getter를 두 번 호출해도 같은 `Week06WorkUnit`이 나온다.
+즉 여기서는 단순 출력이 아니라  
+"같은 객체인지 다른 객체인지"를 보는 것이 핵심이다.
 
-이것이 바로:
+## 3. `/week06/useDifferentScope`는 왜 꼭 봐야 하는가
 
-- prototype으로 선언했지만
-- singleton이 이미 받아 둔 객체를 계속 재사용하는 문제
+이 예제는 6주차의 함정 포인트를 보여 준다.
 
-다.
+`Week06DifferentScopeClient`는 singleton이고,
+`Week06WorkUnit`은 prototype이다.
 
-## 3. `ObjectFactory` 사용
+그런데 생성자에서 직접 주입받으면:
 
-원본 `objectFactoryBeanTest` 예제는 위 문제의 해결 방법이다.
+- singleton 생성 시점에 들어온 한 개의 prototype
+- 그 객체를 계속 사용
 
-`Week06ObjectFactoryClient`는 `ObjectFactory<Week06WorkUnit>`를 주입받고,  
-필요할 때마다 `getObject()`를 호출한다.
+하게 된다.
 
-`/week06/objectFactoryBeanTest`에서 두 번 생성한 객체는 서로 다르다.
+학생이 이 예제를 보면 느껴야 하는 핵심은:
 
-즉:
+> "prototype 선언만 보고 안심하면 안 된다"
 
-- 직접 주입은 고정
-- `ObjectFactory`는 지연 조회
+이다.
 
-라는 차이를 바로 비교할 수 있다.
+## 4. `/week06/objectFactoryBeanTest`는 무엇을 해결하는가
 
-## 4. 라이프사이클 메서드
+위 문제를 해결하기 위해 `Week06ObjectFactoryClient`가 등장한다.
 
-원본 `InitDestroyUnit`은 아래 네 가지를 한 번에 보여준다.
+이 클래스는 prototype을 직접 들고 있지 않고,
+필요할 때마다 컨테이너에서 새로 꺼낸다.
 
+따라서:
+
+- 첫 번째 결과
+- 두 번째 결과
+
+가 서로 달라진다.
+
+이 예제는 "지연 조회"라는 개념을 아주 잘 보여 준다.
+
+## 5. `/week06/post-pre`는 왜 웹 요청으로 만들었는가
+
+원본 실습은 콘솔 출력 중심이었다.  
+현재 프로젝트에서는 화면에서 순서를 확인할 수 있도록 바꿨다.
+
+이렇게 한 이유:
+
+- 학생이 콘솔 로그를 놓쳐도
+- 화면에서 초기화/종료 순서를 읽을 수 있게 하기 위해서다
+
+즉 학습 접근성을 높이기 위한 재구성이다.
+
+## 6. `InitDestroyUnit`을 읽을 때 보는 포인트
+
+이 클래스는 한 번에 여러 훅을 보여 준다.
+
+- constructor
 - `@PostConstruct`
+- `afterPropertiesSet()`
+- `init()`
 - `@PreDestroy`
-- `InitializingBean.afterPropertiesSet()`
-- `DisposableBean.destroy()`
+- `destroy()`
+- `cleanup()`
 
-그리고 `LifeCycleConfig`에서
+코드를 읽을 때는 "어떤 메서드가 더 좋다"보다  
+"서로 다른 시점에 여러 훅이 존재한다"는 점을 먼저 이해해야 한다.
 
-- `initMethod = "init"`
-- `destroyMethod = "cleanup"`
+## 7. `/week06/awareInterfaceEx`는 무엇을 보여 주는가
 
-도 같이 설정한다.
+이 화면은 Aware 인터페이스가 실제로 어떤 데이터를 주는지 확인한다.
 
-현재 프로젝트에서는 `/week06/post-pre`로 열어서
+출력 내용:
 
-- 초기화 직후 이벤트
-- 컨텍스트 종료 후 이벤트
+- 빈 이름
+- ApplicationContext ID
+- 현재 컨테이너의 빈 이름 목록
 
-를 화면에서 순서대로 볼 수 있게 바꿨다.
+즉 Aware는 추상 개념이 아니라 실제 데이터를 주는 인터페이스라는 것을 알 수 있다.
 
-## 5. Aware 인터페이스
+## 8. `/week06/externalConfigEx`는 어떻게 읽어야 하는가
 
-원본 `AwareInterfaceImp`는 컨테이너가 빈 이름과 `ApplicationContext`를 주입하는 흐름을 보여준다.
+이 화면은 두 종류의 설정 읽기를 동시에 보여 준다.
 
-`/week06/awareInterfaceEx`에서 확인 가능한 값:
+### 단일 값
 
-- `setBeanName()`으로 받은 실제 빈 이름
-- `ApplicationContext` ID
-- 현재 컨테이너가 가진 빈 이름 목록
+- 서버 포트
+- 주소
+- 메시지
 
-즉 이 예제는 "빈이 컨테이너 자체를 직접 알아야 할 때"를 설명한다.
+### 묶음 값
 
-## 6. 외부 설정 프로퍼티
+- datasource URL
+- userName
+- password
 
-원본 `ExternalConfigComponent`는 `@PropertySource`, `@Value`, `@ConfigurationProperties`를 함께 사용했다.
+이 비교를 통해 학생은:
 
-현재 프로젝트에서는 `week06-external.properties`로 분리했다.
+- `@Value`
+- `@ConfigurationProperties`
 
-- `@Value`: `week06.server.port`, `week06.server.address`, `week06.message.greeting`
-- `@ConfigurationProperties(prefix = "week06.datasource")`: URL, 사용자명, 비밀번호
+의 역할 차이를 자연스럽게 이해할 수 있다.
 
-`/week06/externalConfigEx`에서 모든 값이 화면에 출력된다.
+## 9. 초심자용 코드 읽기 순서
 
-## 7. 이번 주차에서 기억할 점
+1. `BeanScopeConfig`에서 빈 등록 확인
+2. `BeanScopeController`에서 어떤 URL이 어떤 예제를 담당하는지 확인
+3. `scopeBean`과 `useDifferentScope` 먼저 확인
+4. `objectFactoryBeanTest`로 해결책 확인
+5. `post-pre`, `awareInterfaceEx`, `externalConfigEx` 순서로 읽기
 
-- 6주차 실습은 bean 생성 자체보다 bean 관리 방식이 핵심이다.
-- 스코프와 라이프사이클은 서로 연결된 개념이다.
-- singleton과 prototype을 함께 쓸 때는 `ObjectFactory` 같은 지연 조회가 중요하다.
-- 외부 설정은 단순 값 주입과 객체 매핑을 나눠서 이해해야 한다.
+이 순서가 좋은 이유:
+
+가장 핵심인 "스코프와 의존 문제"를 먼저 잡고,
+그 다음 부가 개념을 보는 편이 이해가 빠르기 때문이다.
+
+## 10. 이 실습이 주는 학습 효과
+
+6주차 실습은 학생에게 다음 능력을 키워 준다.
+
+- 출력 결과를 보고 빈 동작을 해석하는 능력
+- 같은 개념을 다른 코드 스타일로 읽는 능력
+- 설정 파일, 자바 설정, 컨트롤러, JSP를 연결해서 보는 능력
+
+즉 단순히 "예제를 한 번 돌려봄"이 아니라  
+스프링 객체 관리 개념을 구조적으로 다시 붙잡게 해 준다.
+
+## 11. 이 실습을 끝내면 말할 수 있어야 하는 것
+
+- 스코프 차이를 결과 출력으로 설명할 수 있는가
+- singleton 안 prototype 문제를 실제 예제로 설명할 수 있는가
+- ObjectFactory 해결 방식을 설명할 수 있는가
+- 라이프사이클 훅들의 실행 순서를 말할 수 있는가
+- Aware와 외부 설정 프로퍼티가 왜 필요한지 설명할 수 있는가

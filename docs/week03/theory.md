@@ -14,6 +14,17 @@
 
 아직 애매하다면 [공통 기초 문서](../foundation.md)의 `자바 기초 용어`, `빈`, `DI` 부분을 먼저 보고 오는 것이 좋다.
 
+## 현재 프로젝트에서 먼저 볼 코드
+
+- `src/main/java/Lect_B/week03/SmsSender.java`
+- `src/main/java/Lect_B/week03/AppConfig.java`
+- `src/main/java/Lect_B/week03/WorkUnit.java`
+- `src/main/java/Lect_B/week03/HardWorkUnit.java`
+- `src/main/java/Lect_B/week03/ContextController.java`
+- `src/main/resources/static/xml/Ex1.xml`
+
+이 6개 파일을 같이 봐야 3주차 개념이 연결된다.
+
 ## 목차
 
 - [1. 3주차의 핵심 질문](#1-3주차의-핵심-질문)
@@ -72,10 +83,26 @@ SmsSender sender = new SmsSender();
 - 일반 객체 = 자바 객체
 - 빈 = 스프링이 관리하는 자바 객체
 
-### 2-2. 왜 굳이 이름을 따로 붙이는가
+### 2-2. 실제 코드로 보는 Bean 후보
 
-스프링 문맥에서는 단순 `object`보다
-"컨테이너 안에 등록된 관리 대상 객체"라는 의미가 중요하기 때문이다.
+`src/main/java/Lect_B/week03/SmsSender.java`
+
+```java
+public class SmsSender {
+
+    private final String senderName;
+
+    public SmsSender(String senderName) {
+        this.senderName = senderName;
+    }
+}
+```
+
+이 클래스는 그 자체만으로는 그냥 자바 클래스다.  
+하지만 이 클래스를 XML, `@Bean`, `@Component` 중 하나로 등록하면 빈이 된다.
+
+즉 중요한 것은 "클래스가 무엇인가"보다  
+"스프링 컨테이너에 어떻게 등록되었는가"다.
 
 ## 3. 스프링 컨테이너는 왜 필요한가
 
@@ -93,6 +120,38 @@ SmsSender sender = new SmsSender();
 하지만 웹 애플리케이션은 객체 수가 많고 관계가 복잡해진다.
 
 그래서 스프링은 이 관리를 컨테이너에 맡긴다.
+
+### 3-1. 실제 코드로 보는 두 종류의 컨테이너
+
+`src/main/java/Lect_B/week03/ContextController.java`
+
+```java
+xmlContext = new XmlWebApplicationContext();
+xmlContext.setConfigLocation("classpath:static/xml/Ex1.xml");
+xmlContext.refresh();
+
+configContext = new AnnotationConfigWebApplicationContext();
+configContext.register(AppConfig.class);
+configContext.refresh();
+```
+
+이 코드는 두 가지 컨테이너를 비교해서 보여 준다.
+
+- `XmlWebApplicationContext`
+  - XML 설정 파일을 읽는 컨테이너
+- `AnnotationConfigWebApplicationContext`
+  - 자바 설정 클래스(`@Configuration`)를 읽는 컨테이너
+
+여기서 `refresh()`는 매우 중요하다.
+
+의미:
+
+- 설정을 실제로 읽고
+- 빈을 만들고
+- 컨테이너를 사용 가능한 상태로 초기화하라
+
+즉 컨테이너는 단순한 변수나 맵이 아니라  
+"설정을 읽어 실제 Bean 세계를 구성하는 실행 주체"다.
 
 ## 4. DI가 필요한 이유
 
@@ -146,6 +205,49 @@ public class MessageService {
 - 테스트가 편해진다
 - 클래스가 "사용"에 집중할 수 있다
 
+### 4-4. 실제 코드로 보는 3주차 DI
+
+`src/main/java/Lect_B/week03/HardWorkUnit.java`
+
+```java
+@Component
+public class HardWorkUnit {
+
+    @Autowired
+    @Qualifier("configSms")
+    private SmsSender autoSms;
+
+    private WorkUnit workUnit;
+    private String msg;
+
+    @Autowired
+    public HardWorkUnit(WorkUnit workUnit) {
+        this.workUnit = workUnit;
+    }
+
+    @Value("${message.greeting}")
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+}
+```
+
+이 한 클래스 안에 3주차 핵심이 거의 다 들어 있다.
+
+- `@Component`
+  - 이 클래스 자체를 빈으로 등록
+- `@Autowired`
+  - 필요한 빈을 자동 주입
+- `@Qualifier("configSms")`
+  - 같은 타입 빈 중 특정 이름을 지정
+- 생성자
+  - `WorkUnit`이 필수 의존성임을 드러냄
+- `@Value`
+  - 객체가 아니라 설정값 문자열을 주입
+
+즉 DI는 단순히 "객체 하나 넣어 주기"가 아니라,  
+"필수 객체, 선택 객체, 설정값"을 구조적으로 연결하는 작업이다.
+
 ## 5. IoC와 DI의 관계
 
 ### IoC
@@ -164,27 +266,42 @@ DI는 그 IoC를 구현하는 대표적인 방법이다.
 - IoC: 큰 철학/개념
 - DI: 실제 구현 방식
 
+쉽게 말하면:
+
+- IoC = "프레임워크가 큰 흐름을 잡는다"
+- DI = "그 흐름 안에서 필요한 객체를 외부에서 넣어 준다"
+
 ## 6. 빈 등록 방법 3가지
 
 3주차에서 꼭 알아야 하는 포인트는 "빈을 등록하는 방식이 하나가 아니다"라는 점이다.
 
 ### 6-1. XML 방식
 
+`src/main/resources/static/xml/Ex1.xml`
+
 ```xml
 <bean id="xmlSms" class="Lect_B.week03.SmsSender" />
 ```
 
+의미:
+
+- 빈 이름은 `xmlSms`
+- 타입은 `Lect_B.week03.SmsSender`
+- 스프링 컨테이너가 이 객체를 관리하라
+
 장점:
 
 - 설정과 코드가 분리된다
-- 설정 파일을 한눈에 보기 쉽다
+- 레거시 시스템과 교육용 비교에 좋다
 
 단점:
 
 - XML이 길어지기 쉽다
-- 타입 안전성이 약하다
+- IDE 타입 지원이 자바보다 약하다
 
 ### 6-2. Java Config 방식
+
+`src/main/java/Lect_B/week03/AppConfig.java`
 
 ```java
 @Configuration
@@ -197,13 +314,24 @@ public class AppConfig {
 }
 ```
 
+의미:
+
+- `@Configuration`
+  - 이 클래스가 설정 클래스라는 뜻
+- `@Bean`
+  - 메서드가 반환한 객체를 빈으로 등록
+- 빈 이름
+  - 기본적으로 메서드 이름 `configSms`
+
 장점:
 
-- 자바 코드로 설정한다
-- IDE 지원이 좋다
-- XML보다 읽기 쉽다
+- 자바 코드라 IDE 지원이 좋다
+- 타입 안전성이 좋다
+- 현재 실무 스타일과 가깝다
 
 ### 6-3. 컴포넌트 스캔 방식
+
+`src/main/java/Lect_B/week03/WorkUnit.java`
 
 ```java
 @Component
@@ -211,48 +339,124 @@ public class WorkUnit {
 }
 ```
 
+의미:
+
+- 패키지 스캔 대상에 이 클래스가 있으면
+- 스프링이 자동으로 빈으로 등록한다
+
 장점:
 
-- 개발 속도가 빠르다
 - 설정 코드가 줄어든다
+- 개발 속도가 빠르다
 
 단점:
 
-- 자동 등록이 많아지면 어떤 빈이 어디서 왔는지 흐릿해질 수 있다
+- 자동 등록이 많아지면 출처가 흐릿해질 수 있다
 
 ## 7. 자주 쓰는 어노테이션
 
+3주차에서는 어노테이션 이름을 외우는 것보다  
+"이 어노테이션이 스프링에게 어떤 명령을 주는가"를 이해해야 한다.
+
 ### `@Component`
 
-가장 기본적인 빈 등록 어노테이션이다.
+예제:
+
+```java
+@Component
+public class WorkUnit {
+}
+```
+
+역할:
+
+- 일반적인 스프링 빈 등록
 
 ### `@Controller`
 
-웹 요청을 처리하는 컨트롤러 빈이다.
+예제:
 
-### `@Service`
+```java
+@Controller
+public class ContextController {
+}
+```
 
-서비스 계층이라는 의미를 담은 컴포넌트다.
+역할:
 
-### `@Repository`
-
-저장소/DB 접근 계층이라는 의미를 담은 컴포넌트다.
+- 요청 처리용 클래스라는 뜻
+- 동시에 스프링 빈으로 등록
 
 ### `@Configuration`
 
-설정 클래스라는 뜻이다.
+예제:
+
+```java
+@Configuration
+public class AppConfig {
+}
+```
+
+역할:
+
+- 설정 클래스라는 뜻
+- 이 안의 `@Bean` 메서드를 스프링이 읽는다
 
 ### `@Bean`
 
-메서드가 반환한 객체를 빈으로 등록한다.
+예제:
+
+```java
+@Bean
+public SmsSender configSms() {
+    return new SmsSender("학교실습용 SMS 발신기");
+}
+```
+
+역할:
+
+- 메서드 반환 객체를 빈으로 등록
 
 ### `@Autowired`
 
-필요한 빈을 자동으로 주입한다.
+예제:
+
+```java
+@Autowired
+private SmsSender autoSms;
+```
+
+역할:
+
+- 필요한 타입의 빈을 자동으로 연결
+
+### `@Qualifier`
+
+예제:
+
+```java
+@Qualifier("configSms")
+```
+
+역할:
+
+- 같은 타입 빈이 여러 개일 때
+- 어떤 이름의 빈을 쓸지 더 구체적으로 지정
 
 ### `@Value`
 
-설정값을 필드나 메서드에 주입한다.
+예제:
+
+```java
+@Value("${message.greeting}")
+public void setMsg(String msg) {
+    this.msg = msg;
+}
+```
+
+역할:
+
+- 프로퍼티 파일의 설정값을 주입
 
 ## 8. DI 방식 3가지
 
@@ -275,6 +479,7 @@ private SmsSender smsSender;
 ### 8-2. 생성자 주입
 
 ```java
+@Autowired
 public HardWorkUnit(WorkUnit workUnit) {
     this.workUnit = workUnit;
 }
@@ -289,6 +494,7 @@ public HardWorkUnit(WorkUnit workUnit) {
 ### 8-3. Setter 주입
 
 ```java
+@Value("${message.greeting}")
 public void setMsg(String msg) {
     this.msg = msg;
 }
@@ -301,36 +507,65 @@ public void setMsg(String msg) {
 
 에 자주 쓴다.
 
+핵심:
+
+- "무조건 한 방식만"이 아니라
+- **어떤 종류의 값인가**에 따라 쓰임이 달라질 수 있다
+
 ## 9. 컨테이너에서 빈을 꺼내 쓴다는 의미
 
 3주차 실습에서는 `getBean()`이 등장한다.
 
-예:
+`src/main/java/Lect_B/week03/ContextController.java`
 
 ```java
 SmsSender xmlSms = xmlContext.getBean("xmlSms", SmsSender.class);
+SmsSender configSms = configContext.getBean("configSms", SmsSender.class);
 ```
 
 이 코드는:
 
 - 내가 `new SmsSender()`를 한 것이 아니라
-- 컨테이너가 관리하는 `xmlSms` 빈을 가져오는 것
+- 컨테이너가 관리하는 `xmlSms`, `configSms` 빈을 가져오는 것
 
 이다.
 
 즉 `getBean()`은 단순 조회가 아니라
 "관리 중인 객체를 받아 사용한다"는 의미다.
 
+그리고 이어서:
+
+```java
+mav.setViewName("week03/beanView");
+mav.addObject("xmlSms", xmlSms);
+mav.addObject("configSms", configSms);
+```
+
+를 통해 컨테이너에서 꺼낸 빈을 JSP로 보낸다.
+
+즉 3주차는:
+
+1. 빈 등록
+2. 컨테이너 생성
+3. 빈 조회
+4. 화면 전달
+
+까지를 하나의 흐름으로 보여 준다.
+
 ## 10. 왜 3주차가 중요한가
 
 3주차를 이해하면 이후 주차의 거의 모든 개념이 쉬워진다.
 
 - 4주차의 `@Qualifier`
+- 4주차의 `@Value`
 - 5주차의 scope
 - 5주차의 lifecycle
-- 6주차의 object factory
+- 6주차의 ObjectFactory
 
 이 전부 "빈을 컨테이너가 관리한다"는 전제를 깔고 있기 때문이다.
+
+즉 3주차는 단순히 Bean이라는 단어를 배우는 주차가 아니라,  
+스프링의 세계관을 배우는 주차다.
 
 ## 11. 자주 헷갈리는 질문
 
@@ -363,6 +598,11 @@ SmsSender xmlSms = xmlContext.getBean("xmlSms", SmsSender.class);
 어떤 의존성이 반드시 필요한지 구조를 드러내기 위해서다.  
 실무에서는 생성자 주입이 더 권장된다.
 
+### Q5. `@Value`는 객체 주입이 아닌데 왜 같이 배우나?
+
+스프링은 객체뿐 아니라 설정값도 외부에서 넣어 줄 수 있기 때문이다.  
+즉 "주입"의 범위를 넓게 이해해야 한다.
+
 ## 12. 시험 대비 핵심 정리
 
 - 빈은 스프링 컨테이너가 관리하는 객체다.
@@ -370,4 +610,5 @@ SmsSender xmlSms = xmlContext.getBean("xmlSms", SmsSender.class);
 - DI는 필요한 객체를 외부에서 주입받는 방식이다.
 - IoC는 큰 개념, DI는 그 구현 방식이다.
 - 빈 등록 방식은 XML, Java Config, 컴포넌트 스캔이 있다.
-- `@Autowired`는 주입, `@Bean`은 등록, `@Configuration`은 설정 클래스를 뜻한다.
+- `@Component`는 자동 등록, `@Bean`은 수동 등록, `@Configuration`은 설정 클래스다.
+- `@Autowired`는 주입, `@Qualifier`는 같은 타입 빈 구분, `@Value`는 설정값 주입이다.

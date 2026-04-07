@@ -6,7 +6,7 @@
 
 ## 이 문서를 읽기 전에
 
-6주차는 새로운 거대한 개념을 처음 도입하기보다는,
+6주차는 새로운 거대한 개념을 처음 도입하기보다는,  
 5주차 개념을 "다른 코드 형태로 다시 이해하게 하는 역할"이 크다.
 
 즉 6주차 이론은 다음을 목표로 한다.
@@ -14,6 +14,18 @@
 - 이미 배운 scope를 더 명확하게 만들고
 - lifecycle, aware, properties를 다시 묶어 보고
 - 실습 파일 이름과 개념을 1:1로 연결한다
+
+## 현재 프로젝트에서 먼저 볼 코드
+
+- `src/main/java/Lect_B/week06/BeanScopeConfig.java`
+- `src/main/java/Lect_B/week06/BeanScopeController.java`
+- `src/main/java/Lect_B/week06/Week06DifferentScopeClient.java`
+- `src/main/java/Lect_B/week06/Week06ObjectFactoryClient.java`
+- `src/main/java/Lect_B/week06/InitDestroyUnit.java`
+- `src/main/java/Lect_B/week06/LifeCycleConfig.java`
+- `src/main/java/Lect_B/week06/AwareInterfaceImp.java`
+- `src/main/java/Lect_B/week06/ExternalConfigComponent.java`
+- `src/main/resources/static/external.properties`
 
 ## 목차
 
@@ -43,49 +55,105 @@
 
 다.
 
+특히 6주차는 "이론 정의"보다  
+"지금 이 줄이 무슨 의미인지"를 코드 결과로 확인하게 해 주는 주차다.
+
 ## 2. 스코프 4가지 다시 보기
+
+6주차에서는 스코프를 설명만 하지 않고,
+실제로 같은 빈을 두 번 조회했을 때 같은 객체인지 비교한다.
+
+### 실제 설정 코드
+
+`src/main/java/Lect_B/week06/BeanScopeConfig.java`
+
+```java
+@Configuration
+public class BeanScopeConfig {
+
+    @Bean(name = "week06ScopeBean0")
+    public Week06SmsSender singletonBean() {
+        return new Week06SmsSender("week06 singleton");
+    }
+
+    @Bean(name = "week06ScopeBean1")
+    @Scope("prototype")
+    public Week06SmsSender prototypeBean() {
+        return new Week06SmsSender("week06 prototype");
+    }
+
+    @Bean(name = "week06ScopeBean2")
+    @RequestScope
+    public Week06SmsSender requestBean() {
+        return new Week06SmsSender("week06 request");
+    }
+
+    @Bean(name = "week06ScopeBean3")
+    @SessionScope
+    public Week06SmsSender sessionBean() {
+        return new Week06SmsSender("week06 session");
+    }
+}
+```
+
+이 코드가 의미하는 것:
+
+- `@Configuration`
+  - 설정 클래스
+- `@Bean(name = "...")`
+  - 각각 다른 이름의 빈 등록
+- `@Scope("prototype")`
+  - 조회할 때마다 새 객체
+- `@RequestScope`
+  - 한 HTTP 요청 동안 유지
+- `@SessionScope`
+  - 한 세션 동안 유지
 
 ### singleton
 
 - 하나만 생성
 - 계속 재사용
 
-실습에서 확인 포인트:
-
-- 두 번 조회했는데 같은 인스턴스인지
-
 ### prototype
 
 - 조회할 때마다 새 객체 생성
-
-실습에서 확인 포인트:
-
-- 두 번 조회했을 때 다른 인스턴스인지
 
 ### request
 
 - 한 HTTP 요청 동안 유지
 
-실습에서 확인 포인트:
-
-- 같은 요청 안에서는 같고
-- 새 요청에서는 달라지는지
-
 ### session
 
 - 한 사용자 세션 동안 유지
 
-실습에서 확인 포인트:
-
-- 같은 브라우저 세션에서는 유지되는지
-
 즉 6주차에서는 scope를 "정의"가 아니라 "출력 비교 대상"으로 이해해야 한다.
+
+### 실제 조회 코드
+
+`src/main/java/Lect_B/week06/BeanScopeController.java`
+
+```java
+for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 2; j++) {
+        scopeBeanArray[i][j] = context.getBean("week06ScopeBean" + i, Week06SmsSender.class);
+    }
+    sameFlags[i] = scopeBeanArray[i][0] == scopeBeanArray[i][1];
+}
+```
+
+이 코드가 왜 중요한가:
+
+- 같은 이름의 빈을 두 번 조회한다
+- `==`로 같은 객체인지 비교한다
+- 스코프 차이를 실제 결과로 보여 준다
+
+즉 이론을 눈으로 검증하는 코드다.
 
 ## 3. 서로 다른 범위 빈 의존 문제 다시 보기
 
 이 부분이 여전히 핵심이다.
 
-singleton이 prototype을 생성자에서 직접 주입받으면,
+singleton이 prototype을 생성자에서 직접 주입받으면,  
 그 prototype은 singleton 생성 시점에 한 번 들어간 객체다.
 
 그래서 이후 호출에서도 같은 객체가 나온다.
@@ -101,15 +169,103 @@ singleton이 prototype을 생성자에서 직접 주입받으면,
 
 를 같이 봐야 한다는 점이다.
 
-### 해결: `ObjectFactory`
+### 문제 코드
 
-필요할 때마다 컨테이너에 다시 요청하면 된다.
+`src/main/java/Lect_B/week06/Week06DifferentScopeClient.java`
 
-이것이 6주차 실습에서 `objectFactoryBeanTest`가 중요한 이유다.
+```java
+@Component
+public class Week06DifferentScopeClient {
+
+    private final Week06WorkUnit workUnit;
+
+    public Week06DifferentScopeClient(Week06WorkUnit workUnit) {
+        this.workUnit = workUnit;
+    }
+}
+```
+
+이 코드의 의미:
+
+- 클래스는 기본적으로 singleton
+- 생성 시점에 `Week06WorkUnit`을 한 번 받는다
+- 이후 같은 참조를 계속 사용한다
+
+즉 prototype 선언만으로는 충분하지 않다.
+
+### 해결 코드
+
+`src/main/java/Lect_B/week06/Week06ObjectFactoryClient.java`
+
+```java
+@Component
+public class Week06ObjectFactoryClient {
+
+    private final ObjectFactory<Week06WorkUnit> workUnitFactory;
+
+    public Week06ObjectFactoryClient(
+            @Qualifier("week06WorkUnit") ObjectFactory<Week06WorkUnit> workUnitFactory) {
+        this.workUnitFactory = workUnitFactory;
+    }
+
+    public Week06WorkUnit createWorkUnit() {
+        return workUnitFactory.getObject();
+    }
+}
+```
+
+핵심:
+
+- `ObjectFactory`를 주입받아 두고
+- 필요할 때마다 `getObject()`로 새 prototype을 가져온다
+
+즉 "사용 시점 조회"가 핵심 해결책이다.
 
 ## 4. 라이프사이클 메서드 다시 보기
 
 6주차에서는 라이프사이클을 다음 3층으로 이해하면 좋다.
+
+### 실제 코드
+
+`src/main/java/Lect_B/week06/InitDestroyUnit.java`
+
+```java
+public class InitDestroyUnit implements InitializingBean, DisposableBean {
+
+    public InitDestroyUnit() { }
+
+    public void init() { }
+
+    public void cleanup() { }
+
+    @PostConstruct
+    public void postConstruct() { }
+
+    @Override
+    public void afterPropertiesSet() { }
+
+    @PreDestroy
+    public void preDestroy() { }
+
+    @Override
+    public void destroy() { }
+}
+```
+
+그리고 설정 클래스:
+
+`src/main/java/Lect_B/week06/LifeCycleConfig.java`
+
+```java
+@Configuration
+public class LifeCycleConfig {
+
+    @Bean(initMethod = "init", destroyMethod = "cleanup")
+    public InitDestroyUnit myBean() {
+        return new InitDestroyUnit();
+    }
+}
+```
 
 ### 4-1. 생성 직후 단계
 
@@ -131,6 +287,29 @@ singleton이 prototype을 생성자에서 직접 주입받으면,
 "종료"도 하나의 메서드만 있는 것이 아니다.
 
 ## 5. Aware 인터페이스 다시 보기
+
+실제 예제:
+
+`src/main/java/Lect_B/week06/AwareInterfaceImp.java`
+
+```java
+@Component
+public class AwareInterfaceImp implements BeanNameAware, ApplicationContextAware {
+
+    private ApplicationContext context;
+    private String beanName;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.context = applicationContext;
+    }
+
+    @Override
+    public void setBeanName(String name) {
+        this.beanName = name;
+    }
+}
+```
 
 ### `BeanNameAware`
 
@@ -158,6 +337,44 @@ singleton이 prototype을 생성자에서 직접 주입받으면,
 ## 6. 외부 설정 프로퍼티 다시 보기
 
 6주차 실습에서는 이 부분을 더 직관적으로 본다.
+
+### 설정 파일
+
+`src/main/resources/static/external.properties`
+
+```properties
+week06.server.port=8080
+week06.server.address=localhost
+week06.message.greeting=hello, week06 external properties!
+
+week06.datasource.url=jdbc:mysql://localhost:3306/mydb
+week06.datasource.user-name=root
+week06.datasource.password=password
+```
+
+### 실제 코드
+
+`src/main/java/Lect_B/week06/ExternalConfigComponent.java`
+
+```java
+@Component
+@ConfigurationProperties(prefix = "week06.datasource")
+public class ExternalConfigComponent {
+
+    @Value("${week06.server.port}")
+    private String serverPort;
+
+    @Value("${week06.server.address}")
+    private String serverAddress;
+
+    @Value("${week06.message.greeting}")
+    private String greeting;
+
+    private String url;
+    private String userName;
+    private String password;
+}
+```
 
 ### `@Value`
 
@@ -192,7 +409,16 @@ singleton이 prototype을 생성자에서 직접 주입받으면,
 - 출력 결과를 보고 빈 관리 정책을 해석하는 훈련
 - 이론 단어를 실제 파일명과 연결하는 훈련
 
-즉 6주차는 "복습"이지만,
+특히 `BeanScopeController`는:
+
+- `ModelAndView`
+- `context.getBean(...)`
+- `==` 비교
+- `List.of(...)`
+
+같은 자바/스프링 문법이 함께 나온다.
+
+즉 6주차는 "복습"이지만,  
 이해를 굳히는 데 매우 중요한 복습이다.
 
 ## 8. 시험 대비 핵심 정리

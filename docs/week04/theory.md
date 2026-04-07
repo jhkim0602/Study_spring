@@ -2,7 +2,7 @@
 
 ## 주제
 
-4주차는 DI를 실제로 사용하는 방법을 이론적으로 정리하는 주차다.
+4주차는 DI를 실제 코드에서 어떻게 사용하는지 이론과 예제 코드로 함께 이해하는 주차다.
 
 ## 이 문서를 읽기 전에
 
@@ -22,6 +22,16 @@
 - 컬렉션은 어떻게 주입하는가
 
 를 다룬다.
+
+## 현재 프로젝트에서 먼저 볼 코드
+
+- `src/main/java/Lect_B/week04/AppConfig.java`
+- `src/main/java/Lect_B/week04/DIController.java`
+- `src/main/java/Lect_B/week04/HardWorkUnit.java`
+- `src/main/java/Lect_B/week04/LombokWorkUnit.java`
+- `src/main/java/Lect_B/week04/WorkUnit.java`
+- `src/main/resources/xml/week04-beans.xml`
+- `src/main/resources/application.properties`
 
 ## 목차
 
@@ -46,40 +56,111 @@
 
 이다.
 
-3주차가 "빈을 등록하고 컨테이너에 넣는다"였다면,
+3주차가 "빈을 등록하고 컨테이너에 넣는다"였다면,  
 4주차는 "그 빈을 실제 클래스에 주입해 사용한다"는 단계다.
 
 ## 2. Bean 설정 방법 3가지 복습
 
 4주차에서도 여전히 등록 방식 3가지를 같이 본다.
 
-### 2-1. XML 등록
+### 2-1. Java Config 등록
 
-- 외부 XML 파일에 `<bean>` 작성
-- 레거시 프로젝트나 교육용 비교에 자주 등장
+`src/main/java/Lect_B/week04/AppConfig.java`
 
-### 2-2. Java Config 등록
+```java
+@Configuration
+public class AppConfig {
 
-- `@Configuration` + `@Bean`
-- 현재 많이 사용하는 자바 기반 설정 방식
+    @Bean
+    public SmsSender configSms() {
+        return new SmsSender();
+    }
+
+    @Bean
+    public List<String> unit() {
+        List<String> list = new ArrayList<>();
+        list.add("문자열 1");
+        list.add("문자열 2");
+        return list;
+    }
+}
+```
+
+이 코드가 보여 주는 것:
+
+- `@Configuration`
+  - 설정 클래스
+- `@Bean`
+  - 메서드 반환 객체를 빈으로 등록
+- `List<String>`도 빈이 될 수 있음
+
+즉 스프링은 단순 클래스 인스턴스뿐 아니라 컬렉션도 빈으로 관리할 수 있다.
+
+### 2-2. XML 등록
+
+`src/main/resources/xml/week04-beans.xml`
+
+```xml
+<bean id="xmlSms" class="Lect_B.week04.SmsSender">
+    <constructor-arg value="XML 주입용 SMS 발신기" />
+</bean>
+
+<bean id="xmlDiService" class="Lect_B.week04.XmlDiService">
+    <constructor-arg>
+        <ref bean="xmlSms" />
+    </constructor-arg>
+    <property name="msg">
+        <value>Setter를 통해 주입된 기본 데이터</value>
+    </property>
+</bean>
+```
+
+이 코드가 보여 주는 것:
+
+- `<constructor-arg>`
+  - 생성자 주입
+- `<property>`
+  - setter 주입
+- `<ref bean="...">`
+  - 다른 빈 참조
+
+즉 XML도 결국 DI를 표현하는 또 하나의 문법이다.
 
 ### 2-3. 컴포넌트 스캔 등록
 
-- `@Component`, `@Controller`, `@Service`
-- 자동 등록
+`src/main/java/Lect_B/week04/WorkUnit.java`
 
-중요한 점:
+```java
+@Component("week04WorkUnit")
+public class WorkUnit {
 
-등록 방식은 다르지만,  
-결국 컨테이너가 관리하는 빈이 된다는 점은 같다.
+    public String getUnitName() {
+        return "Week04 WorkUnit";
+    }
+}
+```
+
+이 코드가 보여 주는 것:
+
+- `@Component("week04WorkUnit")`
+  - 자동 등록 + 빈 이름 명시
+
+왜 이름까지 붙였는가:
+
+- 같은 타입 빈이 여러 개 있을 때 구분하기 쉽기 때문이다
 
 ## 3. DI 방식 3가지
 
 ### 3-1. 필드 주입
 
+`src/main/java/Lect_B/week04/DIController.java`
+
 ```java
 @Autowired
-private SmsSender smsSender;
+private WebApplicationContext context;
+
+@Autowired
+private LombokWorkUnit lombokWorkUnit;
 ```
 
 장점:
@@ -88,14 +169,18 @@ private SmsSender smsSender;
 
 단점:
 
-- 객체가 어떤 의존성을 꼭 필요로 하는지 생성자만 봐서는 알기 어렵다
+- 어떤 의존성이 꼭 필요한지 생성자만 봐서는 알기 어렵다
 - 테스트 작성이 불편하다
 
 ### 3-2. 생성자 주입
 
+`src/main/java/Lect_B/week04/HardWorkUnit.java`
+
 ```java
-public HardWorkUnit(SmsSender smsSender, WorkUnit workUnit) {
-    this.smsSender = smsSender;
+@Autowired
+public HardWorkUnit(@Qualifier("configSms") SmsSender autoSms,
+        @Qualifier("week04WorkUnit") WorkUnit workUnit) {
+    this.autoSms = autoSms;
     this.workUnit = workUnit;
 }
 ```
@@ -108,7 +193,10 @@ public HardWorkUnit(SmsSender smsSender, WorkUnit workUnit) {
 
 ### 3-3. Setter 주입
 
+같은 파일에는 setter를 통한 설정값 주입도 있다.
+
 ```java
+@Value("${message.greeting}")
 public void setMsg(String msg) {
     this.msg = msg;
 }
@@ -116,10 +204,15 @@ public void setMsg(String msg) {
 
 주로:
 
-- 선택적인 의존성
 - 외부 설정값
+- 선택적 값
 
 에 자주 쓴다.
+
+4주차에서 중요한 포인트는:
+
+- 객체 주입은 생성자 주입이 중심이고
+- 설정값은 setter 또는 필드로도 자주 주입된다는 점이다
 
 ## 4. `@Autowired`의 동작 원리
 
@@ -129,10 +222,10 @@ public void setMsg(String msg) {
 
 ```java
 @Autowired
-private SmsSender smsSender;
+private LombokWorkUnit lombokWorkUnit;
 ```
 
-스프링은 "현재 컨테이너에 `SmsSender` 타입 빈이 있는가?"를 본다.
+스프링은 "현재 컨테이너에 `LombokWorkUnit` 타입 빈이 있는가?"를 먼저 본다.
 
 ### 주의 1. 해당 타입 빈이 없으면?
 
@@ -140,9 +233,19 @@ private SmsSender smsSender;
 
 ### 주의 2. 같은 타입 빈이 여러 개면?
 
-어느 것을 넣어야 할지 모호해서 역시 문제가 생긴다.
+어느 것을 넣어야 할지 모호해서 문제가 생긴다.
 
-그래서 `@Qualifier`가 필요해진다.
+그래서 `@Qualifier` 또는 `@Primary`가 필요해진다.
+
+### 실제 코드에서 왜 중요한가
+
+`HardWorkUnit`은 `SmsSender`와 `WorkUnit`을 받는데,  
+같은 타입 빈이 여러 개 존재할 가능성을 염두에 두고 명시적으로 이름을 지정한다.
+
+즉 4주차는:
+
+- `@Autowired`가 "자동이라 편하다"에서 끝나는 게 아니라
+- "자동이기 때문에 더 정확한 규칙을 알아야 한다"를 배우는 주차다
 
 ## 5. `@Qualifier`가 왜 필요한가
 
@@ -172,6 +275,18 @@ public HardWorkUnit(@Qualifier("configSms") SmsSender autoSms,
 
 다.
 
+### 왜 실제 프로젝트에서 중요해지는가
+
+4주차 이후로는:
+
+- XML에서 등록한 빈
+- Java Config에서 등록한 빈
+- `@Component`로 자동 등록한 빈
+
+이 섞여 있을 수 있다.
+
+따라서 타입만으로는 충분하지 않은 상황이 자주 나온다.
+
 ## 6. `@Value`는 무엇을 주입하는가
 
 `@Value`는 보통 빈 객체가 아니라 **설정값**을 주입한다.
@@ -180,18 +295,26 @@ public HardWorkUnit(@Qualifier("configSms") SmsSender autoSms,
 
 ```java
 @Value("${message.greeting}")
-private String msg;
+public void setMsg(String msg) {
+    this.msg = msg;
+}
 ```
 
-뜻:
+그리고 이 값은 `src/main/resources/application.properties`에서 온다.
+
+```properties
+message.greeting=hello, Spring DI with @Autowired and Setter Injection!
+```
+
+이 뜻은:
 
 - 프로퍼티 파일에 있는 `message.greeting` 값을 읽어
 - `msg` 필드에 넣어라
 
 왜 필요한가:
 
-- 문자열, 포트 번호, 메시지 같은 값은 코드 안에 박아두기보다
-- 설정 파일로 빼는 것이 관리와 변경에 유리하기 때문이다
+- 문자열, 메시지, 포트 번호 같은 값은 코드 안에 박아두기보다
+- 설정 파일로 빼는 것이 변경과 관리에 유리하기 때문이다
 
 ## 7. Java Config, XML, 컴포넌트 스캔의 관계
 
@@ -202,6 +325,12 @@ private String msg;
 꼭 그렇지 않다.
 
 현재 프로젝트도 섞어서 사용한다.
+
+예:
+
+- Java Config: `AppConfig.java`
+- XML: `week04-beans.xml`
+- 컴포넌트 스캔: `HardWorkUnit`, `WorkUnit`, `DIController`
 
 이유:
 
@@ -219,49 +348,92 @@ Lombok은 반복 코드를 줄여주는 도구다.
 4주차에서 중요한 포인트는:
 
 - 생성자 주입이 좋은 방식인데
-- 필드가 많아지면 생성자를 매번 쓰는 게 번거롭다
+- 필드가 많아지면 생성자, getter를 매번 쓰는 게 번거롭다
 
 는 점이다.
 
-그래서 Lombok의:
+현재 프로젝트의 예제:
 
-- `@Getter`
-- `@RequiredArgsConstructor`
+`src/main/java/Lect_B/week04/LombokWorkUnit.java`
 
-같은 기능을 사용하면 코드가 더 간결해진다.
+```java
+@Component
+@Getter
+public class LombokWorkUnit {
 
-하지만 중요한 것은 Lombok 자체가 아니라,  
-**생성자 주입 구조를 더 쉽게 유지하게 해 준다**는 점이다.
+    private final SmsSender configSms;
+    private final WorkUnit week04WorkUnit;
+
+    public LombokWorkUnit(SmsSender configSms, WorkUnit week04WorkUnit) {
+        this.configSms = configSms;
+        this.week04WorkUnit = week04WorkUnit;
+    }
+}
+```
+
+여기서 중요한 점:
+
+- 생성자는 직접 작성했다
+- `@Getter`는 getter 반복 코드를 줄여 준다
+- 즉 Lombok은 "스프링 기능"이 아니라 "자바 반복 코드 감소 도구"다
+
+하지만 결과적으로:
+
+- 생성자 주입 구조를 더 깔끔하게 유지하는 데 도움을 준다
 
 ## 9. 컬렉션 주입이 가능한 이유
 
 스프링은 단일 객체만 주입하는 것이 아니다.
 
-예를 들어:
+예를 들어 `AppConfig.java`에는 아래 코드가 있다.
 
-- `List<String>`
-- `List<Animal>`
-- `Map<String, Animal>`
+```java
+@Bean
+public List<String> unit() {
+    List<String> list = new ArrayList<>();
+    list.add("문자열 1");
+    list.add("문자열 2");
+    return list;
+}
+```
 
-도 빈이 될 수 있고, 주입될 수 있다.
+그리고 `DIController.java`에서는 이렇게 꺼낸다.
+
+```java
+List<String> unit = context.getBean("unit", List.class);
+```
+
+이 코드가 보여 주는 것:
+
+- `List<String>`도 빈이 될 수 있다
+- 컨테이너는 객체 하나만이 아니라 객체 집합도 관리한다
 
 왜 유용한가:
 
 - 여러 구현체를 한 번에 다루기 좋다
-- 순서나 이름을 기준으로 묶어서 관리하기 좋다
-
-즉 스프링은 "객체 하나"만 관리하는 프레임워크가 아니라  
-"객체 집합"도 다루는 프레임워크다.
+- 순서 있는 데이터 묶음을 관리하기 좋다
+- Map/List 기반 DI로 확장되기 쉽다
 
 ## 10. ApplicationContext는 왜 직접 쓰는가
 
 실무에서는 보통 필요한 빈을 직접 주입받는 편이 더 낫다.
 
-하지만 교육용 실습에서 `ApplicationContext`를 직접 쓰는 이유는:
+하지만 교육용 실습에서 `ApplicationContext` 또는 `WebApplicationContext`를 직접 쓰는 이유는:
 
 - 컨테이너가 실제로 존재한다는 것을 체감하게 하고
 - `getBean()` 동작을 눈으로 확인시키며
 - 등록 방식 비교를 쉽게 하기 위해서다
+
+현재 예제:
+
+```java
+SmsSender sms = context.getBean("configSms", SmsSender.class);
+```
+
+의미:
+
+- 컨테이너가 관리하는 `configSms` 빈을
+- 이름과 타입으로 직접 꺼내 쓰겠다
 
 즉 학습용으로는 좋은데,  
 실무에서는 무조건 컨텍스트를 직접 뒤지는 방식보다 DI를 우선한다.
@@ -291,6 +463,11 @@ Lombok은 반복 코드를 줄여주는 도구다.
 - 교육용 비교
 
 에서는 여전히 중요하다.
+
+### Q5. `ModelAndView`는 왜 4주차에 계속 보이나?
+
+4주차는 DI 결과를 결국 화면으로 검증하는 주차이기 때문이다.  
+즉 DI와 MVC가 따로 놀지 않고 연결된다는 점을 보여 주기 위한 구조다.
 
 ## 12. 시험 대비 핵심 정리
 

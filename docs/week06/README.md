@@ -36,6 +36,7 @@
 
 - [이론 문서](theory.md)
 - [실습 문서](practice.md)
+- [연결 과제 문서](../assignment2223002/README.md)
 
 ## 이 주차에서 꼭 잡아야 하는 질문
 
@@ -55,3 +56,8 @@
 
 - 6주차는 5주차 개념의 반복이 아니라, 실습 중심 재확인 단계다.
 - 같은 개념을 다른 코드 형태로 다시 보면 이해가 훨씬 단단해진다.
+
+## 연결 과제
+
+- [과제 이론 문서](../assignment2223002/theory.md)
+  - `ApplicationContextAware`, `InitializingBean`, 실행 흐름이 실제 과제에서 어떻게 쓰였는지 바로 연결해서 볼 수 있다.

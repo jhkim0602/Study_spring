@@ -15,6 +15,7 @@
 6. [4주차](week04/README.md)
 7. [5주차](week05/README.md)
 8. [6주차](week06/README.md)
+9. [과제 문서](assignment2223002/README.md)
 
 ### 자바 기본은 알고 있고 스프링이 처음인 경우
 
@@ -25,6 +26,7 @@
 5. [4주차](week04/README.md)
 6. [5주차](week05/README.md)
 7. [6주차](week06/README.md)
+8. [과제 문서](assignment2223002/README.md)
 
 ### 특정 주차만 빠르게 보고 싶은 경우
 
@@ -102,6 +104,10 @@ docs/
     README.md
     theory.md
     practice.md
+  assignment2223002/
+    README.md
+    theory.md
+    practice.md
 ```
 
 ## 문서별 역할 차이
@@ -142,6 +148,10 @@ docs/
 - 이 컨트롤러는 어떤 요청을 받는가
 - 이 설정 파일은 어떤 빈을 등록하는가
 
+### `assignment2223002/`
+
+주차별 개념을 실제 과제 문제에 어떻게 적용하는지 정리한 통합 과제 문서다.
+
 ## 바로가기
 
 - [용어 사전](glossary.md)
@@ -162,3 +172,6 @@ docs/
 - [6주차 문서 인덱스](week06/README.md)
 - [6주차 이론](week06/theory.md)
 - [6주차 실습](week06/practice.md)
+- [과제 문서 인덱스](assignment2223002/README.md)
+- [과제 이론](assignment2223002/theory.md)
+- [과제 실습](assignment2223002/practice.md)

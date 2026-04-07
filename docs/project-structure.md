@@ -22,12 +22,14 @@ lect_B/
         com/example/lect8/
           Lect8Application.java
         Lect_B/
+          assignment2223002/
           week03/
           week04/
           week05/
           week06/
       resources/
         application.properties
+        static/assignment2223002.properties
         static/external.properties
         static/xml/
         xml/
@@ -51,6 +53,7 @@ lect_B/
     week04/
     week05/
     week06/
+    assignment2223002/
 ```
 
 이 구조는 아무 이유 없이 복잡한 것이 아니다.  
@@ -81,6 +84,14 @@ lect_B/
 - 실행 코드와 설명 텍스트의 책임이 다르기 때문
 - 수업 내용 정리를 코드 변경과 분리하기 위해서
 - 주차별 복습 경로를 명확하게 만들기 위해서
+
+특히 현재 프로젝트에서는:
+
+- `docs/week02~week06/`에 주차별 문서가 있고
+- `docs/assignment2223002/`에 과제 전용 문서가 있다
+
+즉 `docs/`는 단순 메모 폴더가 아니라  
+"주차 학습 -> 과제 응용" 흐름까지 연결하는 학습 구조다.
 
 ## 3. `src/main/java`는 무엇이 들어가는가
 
@@ -191,6 +202,25 @@ DI를 실제로 쓰는 주차다.
 - `AwareInterfaceImp.java`
 - `ExternalConfigComponent.java`
 
+### 3-6. `Lect_B/assignment2223002`
+
+과제 #1 전용 패키지다.
+
+핵심 파일:
+
+- `StdInfo.java`
+- `StdManager.java`
+- `Assignment2223002Config.java`
+- `Assignment2223002Main.java`
+
+이 패키지는 주차 예제와 성격이 조금 다르다.
+
+- `week03~week06`에서 배운 내용을 한 문제에 모아 적용한 패키지이고
+- 웹 요청 처리보다 Bean, DI, lifecycle을 드러내는 콘솔형 구조를 쓴다
+
+즉 이 패키지는 "새 개념 주차"가 아니라  
+"배운 개념을 과제 문제에 옮긴 통합 응용 패키지"라고 보면 된다.
+
 ## 4. 왜 `src/main/resources`가 따로 있는가
 
 이 폴더는 "자바 클래스는 아니지만 애플리케이션 실행에 필요한 자원"을 두는 곳이다.
@@ -225,6 +255,22 @@ DI를 실제로 쓰는 주차다.
 - 6주차: `Week06PropertiesConfig`
 
 에서 같은 파일을 읽는다.
+
+### `static/assignment2223002.properties`
+
+과제 #1 전용 설정 파일이다.
+
+현재 값:
+
+- `assignment2223002.student-count`
+
+이 파일이 존재하는 이유:
+
+- 과제 조건에서 학생 수를 외부 프로퍼티 파일에 두라고 했기 때문
+- 과제 패키지가 주차별 공통 설정과 역할이 다르기 때문
+
+즉 `external.properties`와 달리,  
+이 파일은 학습 예제가 아니라 특정 과제 요구사항을 만족시키는 설정 파일이다.
 
 ### `static/xml/`
 
@@ -432,6 +478,7 @@ return "week05/index";
 - `resources`는 설정/자원
 - `webapp`은 JSP 화면
 - `docs`는 학습 문서
+- `assignment2223002/`는 주차별 학습 내용을 묶은 과제 응용 영역
 
 그리고 주차별 패키지 분리는 단순 정리가 아니라  
 강의 흐름, 개념 확장, 빈 충돌 방지까지 고려한 결과다.

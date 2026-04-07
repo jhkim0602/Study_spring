@@ -154,6 +154,14 @@ private final WorkUnit workUnit;
 
 이다.
 
+참고 사항:
+
+현재 프로젝트는 교수님 실습 방식에 맞춰
+5주차 외부 설정도 `src/main/resources/static/external.properties` 하나로 통합했다.
+
+즉 주차별로 파일을 여러 개 두기보다,
+공통 설정 파일을 두고 각 주차 설정 클래스가 같은 파일을 읽는 구조다.
+
 ## 9. 초심자가 5주차 코드를 읽는 추천 순서
 
 1. `Week05IndexController`와 `/week05/index.jsp`로 전체 메뉴 보기

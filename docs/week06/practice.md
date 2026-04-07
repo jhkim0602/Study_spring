@@ -30,7 +30,8 @@
 | `src/main/java/Lect_B/week06/LifeCycleConfig.java` | init/destroy 설정 |
 | `src/main/java/Lect_B/week06/AwareInterfaceImp.java` | Aware 인터페이스 예제 |
 | `src/main/java/Lect_B/week06/ExternalConfigComponent.java` | 외부 프로퍼티 읽기 |
-| `src/main/resources/week06-external.properties` | 6주차 설정 파일 |
+| `src/main/java/Lect_B/week06/Week06PropertiesConfig.java` | 공통 external.properties 로딩 |
+| `src/main/resources/static/external.properties` | 5주차, 6주차 공통 설정 파일 |
 | `src/main/webapp/views/week06/*.jsp` | 결과 화면 |
 
 ## 1. `BeanScopeConfig`는 왜 중요한가
@@ -159,6 +160,19 @@
 - `@ConfigurationProperties`
 
 의 역할 차이를 자연스럽게 이해할 수 있다.
+
+### 참고 사항
+
+현재 프로젝트는 교수님 실습 방식에 맞춰
+주차별 `week06-external.properties` 파일을 따로 두지 않고,
+`src/main/resources/static/external.properties` 하나만 사용한다.
+
+6주차에서는:
+
+- `Week06PropertiesConfig`가 공통 설정 파일을 등록하고
+- `ExternalConfigComponent`가 `@Value`, `@ConfigurationProperties`로 값을 읽는다
+
+이렇게 분리해야 `@Value("${week06.server.port}")` 같은 코드가 안정적으로 동작한다.
 
 ## 9. 초심자용 코드 읽기 순서
 

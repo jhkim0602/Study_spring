@@ -28,10 +28,9 @@ lect_B/
           week06/
       resources/
         application.properties
+        static/external.properties
         static/xml/
         xml/
-        week05-external.properties
-        week06-external.properties
       webapp/
         index.jsp
         views/
@@ -109,6 +108,16 @@ lect_B/
 - 전부 한 번에 스캔하면 빈 충돌이 날 수 있기 때문이다
 
 즉 현재 통합 프로젝트는 **충돌 없이 실행 가능한 주차를 중심으로 전역 스캔**하고 있다.
+
+중요한 점:
+
+- 주차별 패키지를 나눈 것 자체가 문제는 아니다.
+- 다만 한 프로젝트 안에 여러 주차 예제를 합치면
+- 전역 스캔 범위
+- 같은 역할의 설정 클래스
+- 외부 설정 파일 위치
+
+를 일관되게 맞추지 않으면 실행 시 혼선이 생길 수 있다.
 
 ### 3-2. `Lect_B/week03`
 
@@ -197,6 +206,26 @@ DI를 실제로 쓰는 주차다.
 
 즉 "애플리케이션 동작 규칙"을 적는 곳이다.
 
+### `static/external.properties`
+
+교수님 실습 방식에 맞춘 **공통 외부 설정 파일**이다.
+
+현재 프로젝트는 5주차와 6주차 외부 설정 예제를 이 파일 하나로 통합했다.
+
+왜 하나로 합쳤는가:
+
+- 주차별 `external.properties` 파일이 여러 개 있으면
+- 파일 위치와 로딩 경로를 헷갈리기 쉽고
+- `@PropertySource` 연결 실수로 `@Value`가 실패할 수 있기 때문이다
+
+현재 방식:
+
+- `src/main/resources/static/external.properties` 하나만 유지
+- 5주차: `Week05PropertiesConfig`
+- 6주차: `Week06PropertiesConfig`
+
+에서 같은 파일을 읽는다.
+
 ### `static/xml/`
 
 초기 XML 실습 파일이 들어 있다.
@@ -224,14 +253,18 @@ DI를 실제로 쓰는 주차다.
 - 클래스패스에서 읽어 오는 대상
 - 컴파일 대상 소스와 역할이 다르기 때문
 
-### `week05-external.properties`, `week06-external.properties`
+### 외부 설정 참고 사항
 
-외부 설정 실습용 파일이다.
+예전에는 주차별 외부 설정 파일을 각각 두었지만,
+현재 프로젝트는 교수님 실습 방식에 맞춰 `static/external.properties` 하나만 사용한다.
 
-왜 필요한가:
+주의:
 
-- 값을 코드에 직접 박지 않고
-- 파일에서 읽어 오는 방식을 배우기 위해서
+- 문제의 본질은 "주차별 패키지" 자체가 아니라
+- 통합 프로젝트에서 외부 설정 파일과 스캔 범위를 일관되게 맞추지 않은 데 있다
+
+즉 패키지를 주차별로 나누는 것은 괜찮지만,
+설정 파일 로딩 경로는 한 방식으로 통일하는 편이 안전하다.
 
 ## 5. 왜 JSP는 `src/main/webapp`에 있는가
 

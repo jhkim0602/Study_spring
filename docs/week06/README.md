@@ -61,3 +61,8 @@
 
 - [과제 이론 문서](../assignment2223002/theory.md)
   - `ApplicationContextAware`, `InitializingBean`, 실행 흐름이 실제 과제에서 어떻게 쓰였는지 바로 연결해서 볼 수 있다.
+
+## 다음 주차 연결
+
+- [7주차 AOP](../week07/README.md)
+  - 6주차까지 배운 빈 객체에 메서드 실행 전후 공통 기능을 적용하는 단계다.

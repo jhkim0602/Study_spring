@@ -20,14 +20,14 @@
 
 | 경로 | 역할 |
 |---|---|
-| `src/main/java/Lect_B/week07/Week07AopService.java` | AOP 적용 대상 서비스 |
-| `src/main/java/Lect_B/week07/Week07AdviceAspect.java` | Advice와 Pointcut 정의 |
-| `src/main/java/Lect_B/week07/AopEventLog.java` | 화면에 보여 줄 Advice 실행 기록 저장 |
-| `src/main/java/Lect_B/week07/TraceAop.java` | `@annotation` Pointcut 확인용 어노테이션 |
-| `src/main/java/Lect_B/week07/Week07AopController.java` | 7주차 실습 요청 처리 |
-| `src/main/java/Lect_B/week07/Week07IndexController.java` | 7주차 인덱스 요청 처리 |
-| `src/main/webapp/views/week07/*.jsp` | 실습 결과 화면 |
-| `src/test/java/Lect_B/week07/Week07ContextTests.java` | AOP 적용 테스트 |
+| [Week07AopService.java](../../src/main/java/Lect_B/week07/Week07AopService.java) | AOP 적용 대상 서비스 |
+| [Week07AdviceAspect.java](../../src/main/java/Lect_B/week07/Week07AdviceAspect.java) | Advice와 Pointcut 정의 |
+| [AopEventLog.java](../../src/main/java/Lect_B/week07/AopEventLog.java) | 화면에 보여 줄 Advice 실행 기록 저장 |
+| [TraceAop.java](../../src/main/java/Lect_B/week07/TraceAop.java) | `@annotation` Pointcut 확인용 어노테이션 |
+| [Week07AopController.java](../../src/main/java/Lect_B/week07/Week07AopController.java) | 7주차 실습 요청 처리 |
+| [Week07IndexController.java](../../src/main/java/Lect_B/week07/Week07IndexController.java) | 7주차 인덱스 요청 처리 |
+| [week07 JSP 폴더](../../src/main/webapp/views/week07) | 실습 결과 화면 |
+| [Week07ContextTests.java](../../src/test/java/Lect_B/week07/Week07ContextTests.java) | AOP 적용 테스트 |
 
 ## 1. `/week07` 인덱스
 
@@ -229,4 +229,3 @@ public String annotationTarget(String label)
 - `@After`가 성공과 실패 모두에서 실행된다는 점을 설명할 수 있는가
 - `@Around`에서 `proceed()`가 왜 중요한지 설명할 수 있는가
 - `@annotation` Pointcut이 어떤 장점을 가지는지 설명할 수 있는가
-

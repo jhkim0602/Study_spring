@@ -45,6 +45,17 @@ AOP는 핵심 기능 코드와 공통 기능 코드를 분리해서,
 - [이론 문서](theory.md)
 - [실습 문서](practice.md)
 
+## 핵심 바로가기
+
+- [AOP 주요 구성 요소](theory.md#3-aop-주요-구성-요소)
+- [Advice 종류](theory.md#4-advice-종류)
+- [Pointcut 표현식](theory.md#5-pointcut-표현식)
+- [Spring AOP의 동작 방식](theory.md#9-spring-aop의-동작-방식)
+- [Before Advice 실습](practice.md#2-before-advice-실습)
+- [After Advice 실습](practice.md#3-after-advice-실습)
+- [Around Advice 실습](practice.md#4-around-advice-실습)
+- [Annotation Pointcut 실습](practice.md#5-annotation-pointcut-실습)
+
 ## 이 주차에서 꼭 잡아야 하는 질문
 
 - AOP는 왜 필요한가?

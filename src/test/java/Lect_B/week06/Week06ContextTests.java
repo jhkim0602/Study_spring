@@ -28,7 +28,7 @@ class Week06ContextTests {
 	void week06BeansAreLoaded() {
 		assertThat(controller).isNotNull();
 		assertThat(externalConfigComponent.getServerPort()).isEqualTo("8080");
-		assertThat(externalConfigComponent.getUrl()).contains("lect_b_week06");
+		assertThat(externalConfigComponent.getUrl()).contains("mydb");
 		assertThat(objectFactoryClient.createWorkUnit().getUnitId()).isNotBlank();
 		assertThat(context.containsBean("week06ScopeBean0")).isTrue();
 		assertThat(context.containsBean("week06ScopeBean3")).isTrue();

@@ -59,12 +59,12 @@ lect_B/
         Lect_B/week04/
         Lect_B/week05/
         Lect_B/week06/
+        Lect_B/week07/
       resources/
         application.properties
         static/xml/
+        static/external.properties
         xml/
-        week05-external.properties
-        week06-external.properties
       webapp/
         index.jsp
         views/
@@ -73,6 +73,7 @@ lect_B/
           week04/
           week05/
           week06/
+          week07/
     test/
       java/
   docs/
@@ -85,6 +86,7 @@ lect_B/
     week04/
     week05/
     week06/
+    week07/
 ```
 
 각 위치의 의미:
@@ -478,6 +480,7 @@ public class OrderService {
 3. `week04/theory.md`
 4. `week05/theory.md`
 5. `week06/theory.md`
+6. `week07/theory.md`
 
 ### 시험 직전 복습용
 

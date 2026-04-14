@@ -250,9 +250,179 @@ public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwab
 | `args(...)` | 전달 인자 타입으로 대상 선택 | 문자열 인자를 받는 메서드 등을 고를 때 사용 가능 |
 | `@annotation(...)` | 특정 어노테이션이 붙은 메서드 선택 | `@TraceAop` 대상 추적 |
 
-`within`과 `args`는 현재 화면 실습의 직접 라우트로 분리하지 않았다.
-대신 이론에서 `execution`, `@annotation`과 비교해서 읽는다.
-실습을 늘리기보다, 우선 실제로 자주 쓰는 적용 방식이 코드 안에서 어떻게 읽히는지에 집중하기 위해서다.
+강의자료의 Pointcut 표현식 요소를 빠짐없이 정리하면 다음 흐름이다.
+
+**표현식에서 먼저 읽어야 하는 기호**
+
+| 기호 | 의미 | 예 |
+|---|---|---|
+| `*` | 모든 값, 모든 이름, 모든 타입을 의미 | `execution(* get*(..))` |
+| `..` | 0개 이상을 의미. 패키지 위치에서는 하위 패키지까지, 파라미터 위치에서는 0개 이상의 인자를 의미 | `Lect_B.week07..*`, `(..)` |
+| `+` | 해당 타입과 하위 타입까지 포함 | `within(com.example..MyBaseClass+)` |
+| `&&` | 두 조건을 모두 만족 | `within(...) && @annotation(...)` |
+| `&#124;&#124;` | 둘 중 하나라도 만족 | `within(controller..)` 또는 `within(service..)` |
+| `!` | 조건 부정 | `!@annotation(...)` |
+
+**`execution(...)`: 메서드 실행 모양으로 고른다**
+
+`execution`은 메서드 실행을 기준으로 Pointcut을 설정한다.
+강의자료의 기본 형식은 다음과 같다.
+
+```text
+execution([수식어패턴] 리턴타입패턴 클래스이름패턴.메서드이름패턴(파라미터패턴))
+```
+
+각 부분은 다음처럼 읽는다.
+
+| 부분 | 의미 | 예 |
+|---|---|---|
+| 수식어 패턴 | 생략 가능. `public`, `protected` 같은 접근 제한자 | `public` |
+| 리턴 타입 패턴 | 반환 타입 | `void`, `Integer`, `*` |
+| 클래스 이름 패턴 | 패키지와 클래스 또는 인터페이스 이름 | `Lect_B.week07.Week07AopService` |
+| 메서드 이름 패턴 | 대상 메서드 이름 | `set*`, `get*`, `placeOrder` |
+| 파라미터 패턴 | 인자 개수와 타입 | `()`, `(*)`, `(*, *)`, `(..)`, `(Integer, ..)` |
+
+강의자료의 `execution` 예시는 다음처럼 읽는다.
+
+| 표현식 | 읽는 법 |
+|---|---|
+| `execution(public void set*(..))` | `public`이고 반환 타입이 `void`이며 이름이 `set`으로 시작하고 인자가 0개 이상인 메서드 |
+| `execution(* chap03.core.*.*())` | `chap03.core` 패키지의 직속 클래스 중 인자가 없는 모든 메서드 |
+| `execution(* chap03.core..*.*(..))` | `chap03.core` 패키지와 하위 패키지의 인자가 0개 이상인 모든 메서드 |
+| `execution(Integer chap03.core.WriteArticleService.write(..))` | 반환 타입이 `Integer`인 `WriteArticleService.write(..)` 메서드 |
+| `execution(* get*(*))` | 이름이 `get`으로 시작하고 인자가 1개인 메서드 |
+| `execution(* get*(*, *))` | 이름이 `get`으로 시작하고 인자가 2개인 메서드 |
+| `execution(* read*(Integer, ..))` | 이름이 `read`로 시작하고 첫 번째 인자가 `Integer`이며 뒤에 인자가 0개 이상 올 수 있는 메서드 |
+
+현재 프로젝트의 대표 예시는 다음이다.
+
+```java
+@Before("execution(* Lect_B.week07.Week07AopService.performSensitiveOperation(..))")
+```
+
+이 표현식은 다음처럼 읽는다.
+
+- 반환 타입은 상관없다: `*`
+- 대상 클래스는 `Lect_B.week07.Week07AopService`
+- 대상 메서드는 `performSensitiveOperation`
+- 인자는 0개 이상 허용한다: `(..)`
+
+**`within(...)`: 클래스나 패키지 범위로 고른다**
+
+`within`은 메서드 이름보다 "어느 타입 안에 있는 메서드인가"를 기준으로 삼는다.
+
+| 표현식 | 읽는 법 |
+|---|---|
+| `within(com.example.MyClass)` | `com.example.MyClass` 클래스 안의 모든 메서드 |
+| `within(com.example..*)` | `com.example` 패키지와 모든 하위 패키지 안의 클래스 메서드 |
+| `within(com.example.*)` | `com.example` 패키지의 직속 클래스 메서드. 하위 패키지는 제외 |
+| `within(@org.springframework.stereotype.Service *)` | `@Service`가 붙은 클래스 안의 모든 메서드 |
+| `within(com.example..MyBaseClass+)` | `MyBaseClass`를 상속하거나 구현한 하위 타입의 메서드까지 포함 |
+
+여러 범위를 합칠 수도 있다.
+
+```java
+@Pointcut("within(com.example.MyClass) || within(com.example.service..*)")
+```
+
+이 표현식은 `MyClass` 또는 `service` 패키지 하위 메서드를 대상으로 삼는다.
+
+```java
+@Pointcut("within(com.example.controller..*) || within(com.example.service..*)")
+```
+
+이 표현식은 `controller`와 `service` 계층을 함께 대상으로 삼는다.
+
+현재 프로젝트에 적용해서 읽으면 다음과 같은 식이 가능하다.
+
+```java
+@Pointcut("within(Lect_B.week07..*)")
+```
+
+이 식은 `Lect_B.week07` 패키지와 하위 패키지의 모든 클래스 메서드를 대상으로 삼는다.
+다만 실제 실습 코드에서는 너무 넓게 적용하지 않기 위해 `placeOrder(..)`처럼 구체적인 `execution` 조건을 사용했다.
+
+**`args(...)`: 전달 인자 타입으로 고른다**
+
+`args`는 메서드의 인자 타입이나 개수를 기준으로 JoinPoint를 지정한다.
+
+| 표현식 | 읽는 법 |
+|---|---|
+| `args(java.lang.String)` | 단일 인자가 `String`인 메서드 |
+| `args(java.lang.String, ..)` | 첫 번째 인자가 `String`이고 뒤에 인자가 0개 이상 올 수 있는 메서드 |
+| `args(java.lang.String, int)` | 첫 번째 인자가 `String`, 두 번째 인자가 `int`인 메서드 |
+| `args(com.example.MyBaseClass)` | 단일 인자가 `MyBaseClass` 또는 그 하위 타입인 메서드 |
+| `args(.., java.lang.String, ..)` | 위치와 관계없이 `String` 타입 인자를 포함하는 메서드 |
+| `args(..) && !args(java.lang.String)` | 인자 조건을 부정 조건과 조합하는 예 |
+
+현재 프로젝트에서 `performSensitiveOperation(String userId, String role, String message, int count)`는
+첫 번째 인자가 `String`이고 뒤에 여러 인자가 있으므로 다음 식으로 잡을 수 있다.
+
+```java
+@Before("args(java.lang.String, ..)")
+```
+
+하지만 이 식은 `check(String userId, String role)` 같은 다른 메서드까지 함께 잡을 수 있다.
+그래서 실제 Advice에서는 `execution(...)`으로 대상 메서드를 더 좁혔다.
+
+**`@annotation(...)`: 메서드에 붙은 어노테이션으로 고른다**
+
+`@annotation`은 특정 어노테이션이 선언된 메서드에 Pointcut을 적용한다.
+메서드 이름이 바뀌어도 어노테이션이 유지되면 Advice 적용 대상도 유지되기 때문에,
+감사 로그, 트랜잭션, 추적 로그처럼 의도를 표시하는 방식에 잘 맞는다.
+
+| 표현식 | 읽는 법 |
+|---|---|
+| `@annotation(org.springframework.transaction.annotation.Transactional)` | `@Transactional`이 붙은 모든 메서드 |
+| `within(com.example..*) && @annotation(com.example.annotations.Auditable)` | 특정 패키지 하위에서 `@Auditable`이 붙은 메서드 |
+| `@annotation(org.springframework.transaction.annotation.Transactional) && @annotation(com.example.annotations.Auditable)` | 두 어노테이션이 모두 붙은 메서드 |
+| `!@annotation(org.springframework.scheduling.annotation.Async)` | `@Async`가 붙지 않은 메서드 |
+| `@annotation(requestMapping) && args(request, ..)` | 어노테이션 조건과 첫 번째 인자 조건을 함께 사용 |
+| `@within(org.springframework.stereotype.Service) && @annotation(com.example.annotations.Secured)` | `@Service` 클래스 안에서 `@Secured`가 붙은 메서드 |
+| `execution(* com.example..*(..)) && @annotation(org.springframework.scheduling.annotation.Scheduled)` | 특정 패키지 하위에서 `@Scheduled`가 붙은 메서드 |
+
+현재 프로젝트의 대표 예시는 다음이다.
+
+```java
+@Around("@annotation(Lect_B.week07.TraceAop)")
+public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwable {
+}
+```
+
+이 식은 `@TraceAop`가 붙은 메서드만 대상으로 삼는다.
+현재 대상 메서드는 다음이다.
+
+```java
+@TraceAop
+public String annotationTarget(String label) {
+    return "@TraceAop 대상 메서드 실행: " + label;
+}
+```
+
+**`@Pointcut` 메서드로 이름 붙이기**
+
+Pointcut 표현식은 Advice 어노테이션에 바로 적을 수도 있고,
+별도 메서드에 이름을 붙여 재사용할 수도 있다.
+
+```java
+@Pointcut("execution(* Lect_B.week07.Week07AopService.placeOrder(..))")
+private void orderOperation() {
+}
+
+@AfterReturning(pointcut = "orderOperation()", returning = "result")
+public void logAfterReturning(Object result) {
+}
+```
+
+강의자료 기준으로 `@Pointcut` 메서드는 다음 규칙을 가진다.
+
+- 메서드에 작성한다
+- 리턴 타입은 `void`다
+- 메서드 이름이 Pointcut 이름처럼 사용된다
+- Advice 어노테이션에서 `orderOperation()`처럼 호출 형태로 참조한다
+
+결론적으로 Pointcut을 읽을 때는 표현식 이름을 외우는 것보다,
+그 표현식이 "어떤 기준으로 어떤 메서드를 고르는가"를 말할 수 있어야 한다.
 
 ### 4-4. Aspect
 
@@ -331,6 +501,27 @@ public void logAfterReturning(Object result) {
 
 반환값을 확인할 수 있으므로 성공 로그에 적합하다.
 
+강의자료에서는 반환값을 받는 방법도 함께 다룬다.
+
+```java
+@AfterReturning(pointcut = "orderOperation()", returning = "result")
+public void logAfterReturning(Object result) {
+}
+```
+
+여기서 `returning = "result"`의 이름과 메서드 파라미터 이름 `result`가 연결된다.
+반환 타입을 더 구체적으로 제한하고 싶다면 `Object` 대신 특정 타입을 사용할 수 있다.
+예를 들어 반환값이 `Article` 타입일 때만 Advice를 실행하고 싶다면 다음처럼 읽을 수 있다.
+
+```java
+@AfterReturning(pointcut = "articleOperation()", returning = "article")
+public void logAfterReturning(Article article) {
+}
+```
+
+즉 `@AfterReturning`은 "정상 종료 후 실행"뿐 아니라
+"반환값을 Advice에서 확인할 수 있다"는 점까지 함께 기억해야 한다.
+
 ### 5-3. After Throwing Advice
 
 대상 메서드에서 예외가 발생했을 때 실행된다.
@@ -349,6 +540,27 @@ public void exceptionProcess(Throwable ex) {
 
 예외 메시지를 기록하는 데 적합하다.
 
+강의자료의 핵심은 `throwing` 속성이다.
+
+```java
+@AfterThrowing(pointcut = "orderOperation()", throwing = "ex")
+public void exceptionProcess(Throwable ex) {
+}
+```
+
+여기서 `throwing = "ex"`의 이름과 메서드 파라미터 이름 `ex`가 연결된다.
+모든 예외를 받고 싶으면 `Throwable`을 사용하고,
+특정 예외에서만 실행하고 싶으면 더 구체적인 예외 타입을 사용할 수 있다.
+
+```java
+@AfterThrowing(pointcut = "articleOperation()", throwing = "ex")
+public void exceptionProcess(ArticleNotFoundException ex) {
+}
+```
+
+즉 `@AfterThrowing`은 예외를 없애는 기능이 아니라,
+예외가 발생했다는 사실과 예외 객체를 Advice에서 다룰 수 있게 해 주는 기능이다.
+
 ### 5-4. After Advice
 
 대상 메서드 실행 후 항상 실행된다.
@@ -365,6 +577,16 @@ public void logAfter() {
 - `orderOperation()`: `placeOrder(..)`에 적용
 
 정상 종료든 예외 발생이든 실행된다는 점에서 `finally`와 비슷하다.
+
+다만 `@After`는 `@AfterReturning`처럼 반환값을 직접 받을 수 없고,
+`@AfterThrowing`처럼 예외 객체를 직접 받을 수도 없다.
+대상 메서드 정보나 인자 정보가 필요하면 `JoinPoint`를 받을 수 있다.
+
+```java
+@After("orderOperation()")
+public void logAfter(JoinPoint joinPoint) {
+}
+```
 
 ### 5-5. Around Advice
 
@@ -422,10 +644,28 @@ public void authenticate(JoinPoint joinPoint) {
 |---|---|
 | `getSignature()` | 호출되는 메서드 정보 |
 | `getSignature().getName()` | 메서드 이름 |
+| `getSignature().toLongString()` | 접근 제한자, 반환 타입, 패키지, 클래스, 메서드, 파라미터를 길게 표현 |
+| `getSignature().toShortString()` | 메서드 정보를 짧게 표현 |
 | `getTarget()` | 실제 대상 객체 |
 | `getArgs()` | 메서드에 전달된 인자 |
 
 즉 JoinPoint는 "지금 어떤 메서드가 어떤 인자로 호출되는가"를 Advice에서 알 수 있게 해 준다.
+
+강의자료에서 특히 주의해야 하는 규칙은 파라미터 순서다.
+Advice 메서드가 `JoinPoint`를 받는다면 첫 번째 파라미터로 두는 것이 기본이다.
+
+```java
+// 권장 형태
+public void afterReturning(JoinPoint joinPoint, Object result) {
+}
+
+// 강의자료에서 주의 예시로 다루는 형태
+public void afterReturning(Object result, JoinPoint joinPoint) {
+}
+```
+
+반환값이나 예외 객체는 `returning`, `throwing` 속성으로 이름을 연결하고,
+호출 메서드 정보는 `JoinPoint`로 읽는다고 구분하면 된다.
 
 ## 7. Around Advice와 proceed
 
@@ -446,6 +686,7 @@ public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
 - `proceed()`를 호출하면 대상 메서드가 실행된다
 - `proceed(args)`를 호출하면 변경된 인자로 대상 메서드가 실행된다
 - `proceed()`를 호출하지 않으면 대상 메서드가 실행되지 않는다
+- `@Around` Advice에서 `ProceedingJoinPoint`는 첫 번째 파라미터로 둔다
 
 현재 실습에서는 `role=admin`으로 요청해도,
 Around Advice가 `ADMIN`으로 바꿔 대상 메서드를 실행한다.
@@ -484,6 +725,12 @@ Controller
 프록시는 Advice의 Pointcut 조건에 맞는 메서드인지 확인하고,
 조건에 맞으면 Advice를 실행한 뒤 실제 서비스 메서드를 호출한다.
 
+강의자료에서는 AOP가 공통 기능을 핵심 로직 안에 삽입하는 시점을
+컴파일, 클래스 로딩, 객체 생성 시점 등으로 설명한다.
+Spring AOP 실습에서는 이 흐름을 프록시 객체가 대신 수행한다고 이해하면 된다.
+즉 컨트롤러가 서비스를 호출하는 모양은 그대로지만,
+실제 호출 앞뒤에 프록시가 Advice를 끼워 넣는다.
+
 ### 현재 프로젝트의 AOP 의존성
 
 현재 프로젝트에서는 `build.gradle`에 다음 의존성을 추가했다.
@@ -493,6 +740,14 @@ implementation 'org.springframework.boot:spring-boot-starter-aspectj'
 ```
 
 이 의존성이 있어야 `@Aspect`, `@Before`, `@Around` 같은 AOP 기능을 사용할 수 있다.
+
+강의자료에서 스프링 AOP 구현 방식은 두 가지로 정리된다.
+
+- `@Aspect` 어노테이션 기반 AOP 구현
+- XML 스키마 기반의 POJO 클래스 AOP 구현
+
+현재 프로젝트는 첫 번째 방식인 `@Aspect` 어노테이션 기반이다.
+실습 코드가 `@Controller`, `@Service`, `@Component` 중심으로 구성되어 있기 때문이다.
 
 ### Spring AOP에서 주의할 점
 
@@ -516,15 +771,46 @@ XML 방식에서는 다음 태그를 사용한다.
 - `<aop:after>`
 - `<aop:around>`
 
-예:
+어노테이션 방식과 XML 방식의 대응 관계는 다음과 같다.
+
+| XML 태그 | 어노테이션 | 중요한 속성 |
+|---|---|---|
+| `<aop:before>` | `@Before` | `pointcut-ref`, `method` |
+| `<aop:after-returning>` | `@AfterReturning` | `pointcut-ref`, `method`, `returning` |
+| `<aop:after-throwing>` | `@AfterThrowing` | `pointcut-ref`, `method`, `throwing` |
+| `<aop:after>` | `@After` | `pointcut-ref`, `method` |
+| `<aop:around>` | `@Around` | `pointcut-ref`, `method` |
+
+XML을 사용할 때는 `<beans>`에 `aop` 네임스페이스와 스키마를 추가한다.
 
 ```xml
+<beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+</beans>
+```
+
+형식 예시는 다음과 같다.
+
+```xml
+<bean id="advice" class="com.example.AdviceEx" />
+
 <aop:config>
     <aop:aspect id="aspect1" ref="advice">
         <aop:pointcut
             id="pointcut1"
-            expression="execution(public * Lect_B.week07.Week07AopService.businessLogic())" />
+            expression="execution(public * com.example.PointcutObj.businessLogic())" />
         <aop:before pointcut-ref="pointcut1" method="beforeLog" />
+        <aop:after-returning pointcut-ref="pointcut1" method="returningLog" returning="result" />
+        <aop:after-throwing pointcut-ref="pointcut1" method="throwingLog" throwing="ex" />
+        <aop:after pointcut-ref="pointcut1" method="afterLog" />
+        <aop:around pointcut-ref="pointcut1" method="aroundLog" />
     </aop:aspect>
 </aop:config>
 ```
@@ -678,3 +964,6 @@ Advice 어노테이션 안에서 적용 대상을 읽는 연습이 먼저다.
 - `within`은 클래스나 패키지 범위를 기준으로 대상을 고른다.
 - `args`는 인자 타입을 기준으로 대상을 고른다.
 - `@annotation`은 특정 어노테이션이 붙은 메서드를 대상으로 삼는다.
+- `*`는 모든 값, `..`는 0개 이상, `+`는 하위 타입 포함으로 읽는다.
+- `&&`, `||`, `!`는 Pointcut 조건을 조합하거나 부정할 때 사용한다.
+- `@Pointcut` 메서드는 `void`로 작성하고, Advice 어노테이션에서 이름으로 재사용한다.

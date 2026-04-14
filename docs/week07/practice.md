@@ -35,6 +35,35 @@ Pointcut은 별도 화면의 암기 대상이 아니라,
 | [`src/main/webapp/views/week07/*.jsp`](../../src/main/webapp/views/week07) | 실습 결과 화면 |
 | [`src/test/java/Lect_B/week07/Week07ContextTests.java`](../../src/test/java/Lect_B/week07/Week07ContextTests.java) | AOP 적용 테스트 |
 
+원본 7주차 실습 파일과 현재 프로젝트의 대응 관계는 다음과 같다.
+
+| 원본 실습 파일 | 원본에서 확인할 내용 | 현재 프로젝트 반영 |
+|---|---|---|
+| `build.gradle` | `org.springframework.boot:spring-boot-starter-aspectj` 의존성 | 현재 `build.gradle`에 AOP 의존성 추가 |
+| `index.jsp` | `beforeAOP`, `afterAOP`, `aroundAOP` 링크 | 메인 화면과 `/week07` 화면에서 7주차 실습 진입 |
+| `AdviceAspect.java` Ex1 | `@Before`와 `execution(...performSensitiveOperation(..))` | `/week07/before`에서 인증 Advice 확인 |
+| `AdviceAspect.java` Ex2 | `@Pointcut`, `@AfterReturning`, `@AfterThrowing`, `@After` | `/week07/after`에서 성공/실패/항상 실행 비교 |
+| `AdviceAspect.java` Ex2 주석 | `within(...)` 표현식 비교 | 이 문서의 Pointcut 적용 조건 읽기에서 `execution`과 비교 |
+| `AdviceAspect.java` Ex3 | `@Around`, `ProceedingJoinPoint`, `proceed(args)` | `/week07/around`에서 인자 변경과 반환값 가공 확인 |
+| `ExAOPService.java` | AOP 적용 대상 핵심 로직 | `Week07AopService`로 현재 패키지에 맞게 재구성 |
+| `ExAOPController.java` | 컨트롤러가 서비스 메서드를 호출 | `Week07AopController`가 JSP 화면으로 결과 전달 |
+
+원본 실습 코드의 Pointcut 문자열에는 `com.week06...` 형식이 섞여 있지만,
+현재 통합 프로젝트에서는 실제 패키지인 `Lect_B.week07` 기준으로 고쳐 읽는다.
+중요한 것은 패키지 이름 자체가 아니라 `execution`, `within`, `args`, `@annotation`이 대상을 고르는 방식이다.
+
+또한 원본 실습은 학습용 콘솔 코드라서 다음 특징이 있다.
+
+- 인증 성공 여부를 `Math.random()`으로 결정한다
+- `@Around`에서 `Scanner`로 콘솔 입력을 받는다
+- Advice 실행 결과를 `System.out.println()`으로 확인한다
+
+현재 프로젝트는 웹 실습 흐름에 맞게 다음처럼 바꿨다.
+
+- 랜덤 인증 대신 요청 파라미터 `role`로 성공/실패를 재현한다
+- 콘솔 입력 대신 `/week07/around?role=admin` 같은 URL 파라미터를 사용한다
+- 콘솔 출력 대신 `AopEventLog`와 JSP 화면으로 Advice 실행 순서를 확인한다
+
 ## 1. 왜 `week07` 전용 패키지를 따로 만들었는가
 
 7주차는 이전 주차와 성격이 다르다.
@@ -127,6 +156,88 @@ public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwab
 
 즉 Pointcut은 따로 떼어 암기하는 항목이 아니라,
 Advice가 붙는 대상을 알려 주는 부분이다.
+
+### 강의자료 Pointcut 표현식 요소를 현재 실습에서 확인하는 법
+
+강의자료의 Pointcut 주요 표현식 요소는 `execution`, `within`, `args`, `@annotation`이다.
+현재 프로젝트는 화면 실습의 안정성을 위해 실제 Advice 적용은 좁은 `execution`과 `@annotation` 중심으로 구성했고,
+`within`, `args`는 같은 서비스 메서드를 기준으로 어떻게 읽을 수 있는지 함께 설명한다.
+
+| 표현식 요소 | 기준 | 현재 실습에서 확인하는 방법 |
+|---|---|---|
+| `execution(...)` | 메서드 실행 모양 | `performSensitiveOperation(..)`, `placeOrder(..)`, `check(..)`에 적용된 Advice 확인 |
+| `within(...)` | 클래스 또는 패키지 범위 | 원본 코드의 주석 예시처럼 패키지 전체를 잡을 때 사용 가능하다는 점을 `execution`과 비교 |
+| `args(...)` | 전달 인자 타입과 개수 | `performSensitiveOperation(String, String, String, int)`와 `check(String, String)`의 인자 구조로 해석 연습 |
+| `@annotation(...)` | 메서드에 붙은 어노테이션 | `/week07/pointcut`에서 `@TraceAop`가 붙은 메서드만 Around 대상이 되는지 확인 |
+
+`execution`은 현재 실습에서 가장 직접적으로 보인다.
+
+```java
+@Before("execution(* Lect_B.week07.Week07AopService.performSensitiveOperation(..))")
+```
+
+이 식은 `Week07AopService`의 `performSensitiveOperation(..)` 메서드 실행만 대상으로 삼는다.
+`*`는 반환 타입을 가리지 않는다는 뜻이고,
+`(..)`는 인자가 0개 이상이어도 된다는 뜻이다.
+
+`within`은 다음처럼 같은 패키지 전체를 대상으로 잡을 때 사용할 수 있다.
+
+```java
+@Pointcut("within(Lect_B.week07..*)")
+private void week07PackageOperation() {
+}
+```
+
+이 식은 `Lect_B.week07` 패키지와 하위 패키지 안의 모든 클래스 메서드를 대상으로 삼는다.
+하지만 현재 프로젝트에서 이 식을 실제 Advice에 바로 연결하면
+`Week07AopService`의 여러 메서드가 한꺼번에 Advice 대상이 될 수 있다.
+그래서 실습 코드에서는 `placeOrder(..)`처럼 범위를 좁혀 사용했다.
+
+`args`는 메서드 이름보다 인자 타입에 초점을 둔다.
+
+```java
+@Before("args(java.lang.String, ..)")
+```
+
+이 식은 첫 번째 인자가 `String`이고 뒤에 인자가 0개 이상 올 수 있는 메서드를 대상으로 삼는다.
+현재 서비스에서는 `performSensitiveOperation(String userId, String role, String message, int count)`와
+`check(String userId, String role)`가 모두 이 조건에 걸릴 수 있다.
+따라서 `args`는 "인자 구조 기준으로 넓게 잡을 때" 유용하지만,
+실제 실습에서는 원하지 않는 메서드까지 잡히지 않도록 `execution`으로 좁혔다.
+
+`@annotation`은 현재 프로젝트에서 별도 어노테이션으로 확인한다.
+
+```java
+@Around("@annotation(Lect_B.week07.TraceAop)")
+public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwable {
+}
+```
+
+이 식은 메서드 이름이 아니라 `@TraceAop`가 붙어 있는지를 기준으로 한다.
+그래서 `/week07/pointcut` 화면은 Pointcut 자체를 따로 외우는 화면이 아니라,
+`@Around` Advice가 `@annotation` 조건으로 적용 대상을 고르는 방식을 확인하는 화면이다.
+
+강의자료의 조합 기호도 같은 방식으로 읽는다.
+
+| 기호 | 실습에서 읽는 법 |
+|---|---|
+| `*` | 반환 타입, 메서드 이름 일부, 타입 등을 모두 허용 |
+| `..` | 하위 패키지 또는 0개 이상의 인자 |
+| `+` | 해당 타입과 하위 타입까지 포함 |
+| `&&` | 두 조건을 모두 만족해야 함 |
+| `&#124;&#124;` | 둘 중 하나를 만족하면 됨 |
+| `!` | 해당 조건을 제외 |
+
+예를 들어 다음 식은 `Lect_B.week07` 패키지 안에서 `@TraceAop`가 붙은 메서드만 고른다.
+
+```java
+@Pointcut("within(Lect_B.week07..*) && @annotation(Lect_B.week07.TraceAop)")
+private void tracedWeek07Operation() {
+}
+```
+
+현재 프로젝트에서는 같은 의미를 더 단순하게 보여 주기 위해
+`@Around("@annotation(Lect_B.week07.TraceAop)")`를 사용했다.
 
 ## 4. `/week07/before` 화면은 무엇을 증명하나
 
@@ -351,3 +462,5 @@ AOP의 핵심은 공통 기능을 직접 호출하지 않는 것이다.
 - `@Before`, `@AfterReturning`, `@AfterThrowing`, `@After`, `@Around`의 차이를 말할 수 있는가
 - `JoinPoint`와 `ProceedingJoinPoint`의 차이를 설명할 수 있는가
 - `execution`, `within`, `args`, `@annotation`이 대상을 고르는 기준이라는 점을 설명할 수 있는가
+- `*`, `..`, `+`, `&&`, `||`, `!`를 Pointcut 표현식 안에서 읽을 수 있는가
+- 원본 실습의 `beforeAOP`, `afterAOP`, `aroundAOP` 흐름이 현재 `/week07/before`, `/week07/after`, `/week07/around`로 어떻게 바뀌었는지 설명할 수 있는가

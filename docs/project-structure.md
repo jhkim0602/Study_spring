@@ -213,9 +213,13 @@ DI를 실제로 쓰는 주차다.
 
 - `Week07AopService.java`
 - `Week07AdviceAspect.java`
+- `Week07XmlAopService.java`
+- `Week07XmlAdvice.java`
+- `Week07XmlAopConfig.java`
 - `AopEventLog.java`
 - `TraceAop.java`
 - `Week07AopController.java`
+- `src/main/resources/xml/week07-aop.xml`
 
 이 파일들의 학습 해설은 `docs/week07/theory.md`와 `docs/week07/practice.md`에서 다룬다.
 

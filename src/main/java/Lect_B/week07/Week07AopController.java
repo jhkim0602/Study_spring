@@ -9,10 +9,13 @@ import org.springframework.web.servlet.ModelAndView;
 public class Week07AopController {
 
 	private final Week07AopService aopService;
+	private final Week07XmlAopService xmlAopService;
 	private final AopEventLog eventLog;
 
-	public Week07AopController(Week07AopService aopService, AopEventLog eventLog) {
+	public Week07AopController(Week07AopService aopService, Week07XmlAopService xmlAopService,
+			AopEventLog eventLog) {
 		this.aopService = aopService;
+		this.xmlAopService = xmlAopService;
 		this.eventLog = eventLog;
 	}
 
@@ -89,6 +92,35 @@ public class Week07AopController {
 		ModelAndView mav = new ModelAndView("week07/pointcutView");
 		mav.addObject("label", label);
 		mav.addObject("result", result);
+		mav.addObject("events", eventLog.snapshot());
+		return mav;
+	}
+
+	@GetMapping("/week07/xml")
+	public ModelAndView xmlAop(
+			@RequestParam(defaultValue = "student") String userId,
+			@RequestParam(defaultValue = "admin") String role,
+			@RequestParam(defaultValue = "100") double orderValue,
+			@RequestParam(defaultValue = "50") double minimumValue) {
+		eventLog.reset();
+
+		ModelAndView mav = new ModelAndView("week07/xmlView");
+		try {
+			String orderResult = xmlAopService.processXmlOrder(orderValue, minimumValue);
+			mav.addObject("orderResult", orderResult);
+			mav.addObject("orderSuccess", true);
+		} catch (RuntimeException ex) {
+			mav.addObject("orderError", ex.getMessage());
+			mav.addObject("orderSuccess", false);
+		}
+
+		String permissionResult = xmlAopService.checkXmlPermission(userId, role);
+
+		mav.addObject("userId", userId);
+		mav.addObject("role", role);
+		mav.addObject("orderValue", orderValue);
+		mav.addObject("minimumValue", minimumValue);
+		mav.addObject("permissionResult", permissionResult);
 		mav.addObject("events", eventLog.snapshot());
 		return mav;
 	}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<bean id="week07XmlAopService" class="Lect_B.week07.Week07XmlAopService" />
+
+	<bean id="week07XmlAdvice" class="Lect_B.week07.Week07XmlAdvice">
+		<constructor-arg ref="aopEventLog" />
+	</bean>
+
+	<aop:config proxy-target-class="true">
+		<aop:aspect id="week07XmlAspect" ref="week07XmlAdvice">
+			<aop:pointcut id="xmlOrderOperation"
+				expression="execution(* Lect_B.week07.Week07XmlAopService.processXmlOrder(..))" />
+			<aop:pointcut id="xmlCheckOperation"
+				expression="execution(* Lect_B.week07.Week07XmlAopService.checkXmlPermission(..))" />
+
+			<aop:before pointcut-ref="xmlOrderOperation" method="beforeXml" />
+			<aop:after-returning pointcut-ref="xmlOrderOperation" method="afterReturningXml" returning="result" />
+			<aop:after-throwing pointcut-ref="xmlOrderOperation" method="afterThrowingXml" throwing="ex" />
+			<aop:after pointcut-ref="xmlOrderOperation" method="afterXml" />
+			<aop:around pointcut-ref="xmlCheckOperation" method="aroundXml" />
+		</aop:aspect>
+	</aop:config>
+
+</beans>

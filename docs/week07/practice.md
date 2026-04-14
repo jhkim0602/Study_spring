@@ -28,6 +28,10 @@ Pointcut은 별도 화면의 암기 대상이 아니라,
 |---|---|
 | [`src/main/java/Lect_B/week07/Week07AopService.java`](../../src/main/java/Lect_B/week07/Week07AopService.java) | AOP 적용 대상 서비스 |
 | [`src/main/java/Lect_B/week07/Week07AdviceAspect.java`](../../src/main/java/Lect_B/week07/Week07AdviceAspect.java) | Advice와 적용 조건 정의 |
+| [`src/main/java/Lect_B/week07/Week07XmlAopService.java`](../../src/main/java/Lect_B/week07/Week07XmlAopService.java) | XML AOP 적용 대상 서비스 |
+| [`src/main/java/Lect_B/week07/Week07XmlAdvice.java`](../../src/main/java/Lect_B/week07/Week07XmlAdvice.java) | XML에서 연결하는 POJO Advice |
+| [`src/main/java/Lect_B/week07/Week07XmlAopConfig.java`](../../src/main/java/Lect_B/week07/Week07XmlAopConfig.java) | XML AOP 설정 파일 import |
+| [`src/main/resources/xml/week07-aop.xml`](../../src/main/resources/xml/week07-aop.xml) | XML 기반 Aspect, Pointcut, Advice 연결 설정 |
 | [`src/main/java/Lect_B/week07/AopEventLog.java`](../../src/main/java/Lect_B/week07/AopEventLog.java) | 화면에 보여 줄 Advice 실행 기록 저장 |
 | [`src/main/java/Lect_B/week07/TraceAop.java`](../../src/main/java/Lect_B/week07/TraceAop.java) | 어노테이션 기반 적용 조건 확인용 어노테이션 |
 | [`src/main/java/Lect_B/week07/Week07AopController.java`](../../src/main/java/Lect_B/week07/Week07AopController.java) | 7주차 실습 라우트 제어 |
@@ -47,6 +51,7 @@ Pointcut은 별도 화면의 암기 대상이 아니라,
 | `AdviceAspect.java` Ex3 | `@Around`, `ProceedingJoinPoint`, `proceed(args)` | `/week07/around`에서 인자 변경과 반환값 가공 확인 |
 | `ExAOPService.java` | AOP 적용 대상 핵심 로직 | `Week07AopService`로 현재 패키지에 맞게 재구성 |
 | `ExAOPController.java` | 컨트롤러가 서비스 메서드를 호출 | `Week07AopController`가 JSP 화면으로 결과 전달 |
+| PPT XML AOP 설정 | `<aop:config>`, `<aop:aspect>`, `<aop:pointcut>`, `<aop:before>`, `<aop:after-returning>`, `<aop:after-throwing>`, `<aop:after>`, `<aop:around>` | `week07-aop.xml`과 `/week07/xml`로 실제 동작 확인 |
 
 원본 실습 코드의 Pointcut 문자열에는 `com.week06...` 형식이 섞여 있지만,
 현재 통합 프로젝트에서는 실제 패키지인 `Lect_B.week07` 기준으로 고쳐 읽는다.
@@ -63,6 +68,7 @@ Pointcut은 별도 화면의 암기 대상이 아니라,
 - 랜덤 인증 대신 요청 파라미터 `role`로 성공/실패를 재현한다
 - 콘솔 입력 대신 `/week07/around?role=admin` 같은 URL 파라미터를 사용한다
 - 콘솔 출력 대신 `AopEventLog`와 JSP 화면으로 Advice 실행 순서를 확인한다
+- 강의자료의 XML AOP 설정은 `week07-aop.xml`로 실제 프로젝트에 추가했다
 
 ## 1. 왜 `week07` 전용 패키지를 따로 만들었는가
 
@@ -75,6 +81,7 @@ Pointcut은 별도 화면의 암기 대상이 아니라,
 
 ```text
 src/main/java/Lect_B/week07/
+src/main/resources/xml/week07-aop.xml
 src/main/webapp/views/week07/
 docs/week07/
 ```
@@ -95,6 +102,8 @@ docs/week07/
 - `placeOrder()`: 정상 종료와 예외 발생 비교 대상
 - `check()`: 실행 전후 전체 제어 대상
 - `annotationTarget()`: `@TraceAop`가 붙은 추적 대상
+- `Week07XmlAopService.processXmlOrder()`: XML 기반 After 계열 Advice 대상
+- `Week07XmlAopService.checkXmlPermission()`: XML 기반 Around Advice 대상
 
 중요한 점:
 
@@ -102,6 +111,7 @@ docs/week07/
 
 즉 서비스는 핵심 로직만 가지고,
 공통 기능은 `Week07AdviceAspect`가 처리한다.
+XML 실습에서는 같은 역할을 `Week07XmlAdvice`와 `week07-aop.xml`이 나누어 맡는다.
 
 ## 3. `Week07AdviceAspect`는 왜 핵심 예제인가
 
@@ -122,6 +132,7 @@ docs/week07/
 즉 7주차 PPT의 핵심 용어가 이 클래스 하나에 모여 있다.
 
 코드를 읽을 때는 "이 메서드가 언제 실행되는가"와 "어디에 적용되는가"를 같이 봐야 한다.
+XML 기반 비교 실습에서는 같은 질문을 `Week07XmlAdvice`와 `week07-aop.xml`에 던지면 된다.
 
 ### Advice와 적용 조건을 같이 읽는 법
 
@@ -238,6 +249,46 @@ private void tracedWeek07Operation() {
 
 현재 프로젝트에서는 같은 의미를 더 단순하게 보여 주기 위해
 `@Around("@annotation(Lect_B.week07.TraceAop)")`를 사용했다.
+
+### XML 설정을 코드에서 실제로 읽는 법
+
+강의자료의 XML 기반 AOP는 현재 프로젝트에서 `week07-aop.xml`로 확인한다.
+
+```xml
+<aop:config proxy-target-class="true">
+    <aop:aspect id="week07XmlAspect" ref="week07XmlAdvice">
+        <aop:pointcut id="xmlOrderOperation"
+            expression="execution(* Lect_B.week07.Week07XmlAopService.processXmlOrder(..))" />
+
+        <aop:before pointcut-ref="xmlOrderOperation" method="beforeXml" />
+        <aop:after-returning pointcut-ref="xmlOrderOperation" method="afterReturningXml" returning="result" />
+        <aop:after-throwing pointcut-ref="xmlOrderOperation" method="afterThrowingXml" throwing="ex" />
+        <aop:after pointcut-ref="xmlOrderOperation" method="afterXml" />
+    </aop:aspect>
+</aop:config>
+```
+
+이 XML은 다음처럼 읽는다.
+
+- `week07XmlAdvice`: Advice 메서드를 가진 POJO 빈
+- `xmlOrderOperation`: `processXmlOrder(..)`를 가리키는 Pointcut 이름
+- `<aop:before>`: `beforeXml()`을 대상 메서드 실행 전에 연결
+- `<aop:after-returning>`: 정상 종료 후 `afterReturningXml()` 연결
+- `<aop:after-throwing>`: 예외 발생 후 `afterThrowingXml()` 연결
+- `<aop:after>`: 성공/실패와 관계없이 `afterXml()` 연결
+- `returning="result"`: 반환값을 `afterReturningXml()`의 `result` 파라미터로 전달
+- `throwing="ex"`: 예외 객체를 `afterThrowingXml()`의 `ex` 파라미터로 전달
+
+Around Advice도 XML에서 연결한다.
+
+```xml
+<aop:pointcut id="xmlCheckOperation"
+    expression="execution(* Lect_B.week07.Week07XmlAopService.checkXmlPermission(..))" />
+<aop:around pointcut-ref="xmlCheckOperation" method="aroundXml" />
+```
+
+이 설정은 `checkXmlPermission(..)` 호출을 `aroundXml()`이 감싼다는 뜻이다.
+`aroundXml()` 내부에서는 어노테이션 방식과 마찬가지로 `ProceedingJoinPoint.proceed(args)`를 호출해야 대상 메서드가 실행된다.
 
 ## 4. `/week07/before` 화면은 무엇을 증명하나
 
@@ -393,7 +444,52 @@ Aspect의 Advice:
 
 요청마다 로그가 섞이지 않도록 하기 위해서다.
 
-## 9. 테스트는 무엇을 확인하나
+XML 실습에서도 같은 `AopEventLog`를 사용한다.
+`Week07XmlAdvice`는 XML에서 빈으로 등록되지만,
+생성자 인자로 `aopEventLog` 빈을 주입받아 JSP 화면에 실행 기록을 남긴다.
+
+## 9. `/week07/xml` 화면은 무엇을 보여 주나
+
+`/week07/xml`은 강의자료의 XML 기반 AOP 설정을 실제 웹 화면에서 확인하는 실습이다.
+
+기본 요청:
+
+```text
+/week07/xml
+```
+
+예외 요청:
+
+```text
+/week07/xml?orderValue=20&minimumValue=50
+```
+
+권한 요청:
+
+```text
+/week07/xml?role=user
+```
+
+읽는 법:
+
+- `processXmlOrder(..)`는 `xmlOrderOperation` Pointcut 대상이다
+- 성공하면 `[XML Before]`, `[XML AfterReturning]`, `[XML After]`가 기록된다
+- 실패하면 `[XML Before]`, `[XML AfterThrowing]`, `[XML After]`가 기록된다
+- `checkXmlPermission(..)`은 `xmlCheckOperation` Pointcut 대상이다
+- `role=admin` 또는 `role=user`는 XML Around Advice에서 대문자로 바뀐다
+- 화면의 실행 기록은 어노테이션 Advice가 아니라 XML로 연결된 `Week07XmlAdvice`가 남긴다
+
+이 화면에서 중요한 비교는 다음이다.
+
+| 비교 대상 | 어노테이션 기반 | XML 기반 |
+|---|---|---|
+| Advice 클래스 | `Week07AdviceAspect` | `Week07XmlAdvice` |
+| 대상 서비스 | `Week07AopService` | `Week07XmlAopService` |
+| 연결 방식 | `@Before`, `@Around` 등 | `<aop:before>`, `<aop:around>` 등 |
+| 설정 위치 | Java 클래스 | `week07-aop.xml` |
+| 화면 | `/week07/before`, `/week07/after`, `/week07/around`, `/week07/pointcut` | `/week07/xml` |
+
+## 10. 테스트는 무엇을 확인하나
 
 `Week07ContextTests`는 단순히 빈이 로딩되는지만 보지 않는다.
 
@@ -407,12 +503,15 @@ Aspect의 Advice:
 - 실패 주문에서 `@AfterThrowing`과 `@After`가 기록되는가
 - `@Around`가 인자를 변경하고 반환값을 가공하는가
 - `@annotation` 조건이 `@TraceAop` 메서드를 추적하는가
+- XML AOP 서비스가 프록시로 감싸졌는가
+- XML `<aop:before>`, `<aop:after-returning>`, `<aop:after-throwing>`, `<aop:after>`, `<aop:around>`가 실제로 실행되는가
 
 특히 `AopUtils.isAopProxy(aopService)` 검증은 중요하다.
 
 서비스가 실제로 AOP 프록시로 감싸졌는지 확인하기 때문이다.
+XML 실습에서는 `AopUtils.isAopProxy(xmlAopService)`도 함께 확인한다.
 
-## 10. 초심자가 7주차 코드를 읽는 순서
+## 11. 초심자가 7주차 코드를 읽는 순서
 
 1. `Week07AopService`에서 핵심 로직 확인
 2. `Week07AdviceAspect`에서 Advice 종류 확인
@@ -422,13 +521,15 @@ Aspect의 Advice:
 6. `/week07/after`에서 성공/실패 Advice 비교
 7. `/week07/around`에서 인자 변경과 반환값 가공 확인
 8. `/week07/pointcut`에서 어노테이션 기반 적용 조건 확인
+9. `week07-aop.xml`에서 XML 기반 Aspect와 Pointcut 연결 확인
+10. `/week07/xml`에서 XML Advice 실행 기록 확인
 
 이 순서가 좋은 이유:
 
 먼저 핵심 로직을 보고,
 그 다음 공통 기능이 어디서 끼어드는지 보는 편이 AOP를 이해하기 쉽기 때문이다.
 
-## 11. 이 실습에서 자주 놓치는 포인트
+## 12. 이 실습에서 자주 놓치는 포인트
 
 ### 포인트 1. Advice는 서비스 코드 안에서 직접 호출하지 않는다
 
@@ -454,13 +555,25 @@ AOP의 핵심은 공통 기능을 직접 호출하지 않는 것이다.
 
 이 질문 없이 Advice 종류만 외우면 AOP 코드를 제대로 읽기 어렵다.
 
-## 12. 이 실습을 끝내면 말할 수 있어야 하는 것
+### 포인트 4. XML 기반 AOP도 핵심은 같다
+
+XML 기반 AOP는 설정 위치만 다르다.
+핵심은 여전히 다음 질문이다.
+
+> "어떤 Advice가 어느 Pointcut 대상에 언제 실행되는가?"
+
+어노테이션에서는 이 연결을 Java 코드에서 읽고,
+XML에서는 `<aop:pointcut>`과 `<aop:before>` 같은 태그에서 읽는다.
+
+## 13. 이 실습을 끝내면 말할 수 있어야 하는 것
 
 - AOP가 왜 필요한지 설명할 수 있는가
 - 핵심 관심사와 공통 관심사를 구분할 수 있는가
 - Advice와 적용 조건의 역할을 설명할 수 있는가
 - `@Before`, `@AfterReturning`, `@AfterThrowing`, `@After`, `@Around`의 차이를 말할 수 있는가
+- `<aop:before>`, `<aop:after-returning>`, `<aop:after-throwing>`, `<aop:after>`, `<aop:around>`가 각각 어떤 Advice에 대응하는지 설명할 수 있는가
 - `JoinPoint`와 `ProceedingJoinPoint`의 차이를 설명할 수 있는가
 - `execution`, `within`, `args`, `@annotation`이 대상을 고르는 기준이라는 점을 설명할 수 있는가
 - `*`, `..`, `+`, `&&`, `||`, `!`를 Pointcut 표현식 안에서 읽을 수 있는가
 - 원본 실습의 `beforeAOP`, `afterAOP`, `aroundAOP` 흐름이 현재 `/week07/before`, `/week07/after`, `/week07/around`로 어떻게 바뀌었는지 설명할 수 있는가
+- 강의자료의 XML AOP 설정이 현재 `week07-aop.xml`과 `/week07/xml`에 어떻게 반영됐는지 설명할 수 있는가

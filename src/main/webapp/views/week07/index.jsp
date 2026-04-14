@@ -16,6 +16,7 @@
 	<li><a href="/week07/after?orderValue=20&minimumValue=50">After Throwing / After 예외 예제</a></li>
 	<li><a href="/week07/around">Around Advice 예제</a></li>
 	<li><a href="/week07/pointcut">Annotation Pointcut 예제</a></li>
+	<li><a href="/week07/xml">XML 기반 AOP 설정 예제</a></li>
 </ul>
 
 <p><a href="/">루트 인덱스로 이동</a></p>

@@ -11,6 +11,9 @@
 
 - `Week07AopService`
 - `Week07AdviceAspect`
+- `Week07XmlAopService`
+- `Week07XmlAdvice`
+- `week07-aop.xml`
 - `AopEventLog`
 - `TraceAop`
 - `Week07AopController`
@@ -36,6 +39,7 @@
 - Advice가 언제 실행되는지 이해하고
 - Pointcut을 Advice 안에서 함께 읽어 적용 대상을 파악하고
 - `execution`, `within`, `args`, `@annotation` 표현식이 각각 어떤 기준으로 대상을 고르는지 구분하고
+- 어노테이션 기반 AOP와 XML 스키마 기반 AOP 설정을 비교하고
 - 실제 컨트롤러-서비스-JSP 흐름 안에서 실행 순서를 확인하는 것
 
 이다.
@@ -66,6 +70,7 @@ Pointcut은 별도 암기 단원이 아니라,
 - 각 Advice에 적힌 Pointcut 조건은 어떤 대상 메서드를 가리키는가?
 - `execution`, `within`, `args`, `@annotation`은 각각 무엇을 기준으로 JoinPoint를 선택하는가?
 - `*`, `..`, `+`, `&&`, `||`, `!`는 Pointcut 표현식에서 어떻게 읽어야 하는가?
+- `@Aspect` 방식과 `<aop:config>` 방식은 어디가 같고 어디가 다른가?
 - `@Around`에서 `proceed()`를 호출하지 않으면 어떻게 되는가?
 
 ## 추천 읽기 순서
@@ -73,8 +78,9 @@ Pointcut은 별도 암기 단원이 아니라,
 1. `theory.md`에서 AOP가 왜 필요한지 먼저 확인
 2. `Week07AopService`에서 핵심 로직만 읽기
 3. `Week07AdviceAspect`에서 Advice와 Pointcut 조건을 한 줄씩 같이 읽기
-4. `practice.md`에서 `/week07` 라우트별 실행 결과 확인
-5. JSP 화면의 Advice 실행 기록과 Aspect 코드를 다시 연결하기
+4. `week07-aop.xml`에서 XML 방식의 Aspect, Pointcut, Advice 연결 방식 읽기
+5. `practice.md`에서 `/week07` 라우트별 실행 결과 확인
+6. JSP 화면의 Advice 실행 기록과 Aspect 코드를 다시 연결하기
 
 ## 빠른 요약
 
@@ -82,6 +88,7 @@ Pointcut은 별도 암기 단원이 아니라,
 - Advice는 실행할 공통 기능이고, Pointcut은 그 Advice가 적용될 대상을 고르는 조건이다.
 - Pointcut은 독립적으로 외우기보다 `@Before("...")`, `@Around("...")` 안에서 실제 적용 대상을 읽어야 한다.
 - 강의자료의 주요 Pointcut 표현식 요소는 `execution`, `within`, `args`, `@annotation`이며, 조건 조합에는 `&&`, `||`, `!`를 사용한다.
+- 현재 프로젝트는 어노테이션 기반 AOP와 XML 기반 AOP를 모두 실습한다.
 - Spring AOP는 스프링 빈의 메서드 실행을 프록시로 감싸는 방식으로 동작한다.
 - `@Around`는 가장 강력하지만 `proceed()` 호출을 직접 관리해야 한다.
 

@@ -23,7 +23,10 @@ AOP는 여러 코드에 반복해서 등장하는 공통 기능을 핵심 로직
 그 코드를 서비스 메서드마다 직접 넣으면 핵심 로직과 로그 코드가 섞인다.
 
 AOP는 이 반복 코드를 Aspect 클래스로 빼고,
-Pointcut 조건에 맞는 메서드 실행 지점에 Advice를 적용한다.
+Advice가 필요한 메서드에 적용되도록 만든다.
+
+여기서 Pointcut은 따로 떨어진 단원이 아니다.
+Pointcut은 항상 "이 Advice가 어느 메서드에 적용되는가"를 설명하는 조건으로 읽어야 한다.
 
 ## 현재 프로젝트에서 먼저 볼 코드
 
@@ -41,15 +44,14 @@ Pointcut 조건에 맞는 메서드 실행 지점에 Advice를 적용한다.
 - [2. AOP가 필요한 이유](#2-aop가-필요한-이유)
 - [3. 핵심 관심사와 공통 관심사](#3-핵심-관심사와-공통-관심사)
 - [4. AOP 주요 구성 요소](#4-aop-주요-구성-요소)
-- [5. Advice 종류](#5-advice-종류)
-- [6. Pointcut 표현식](#6-pointcut-표현식)
-- [7. Aspect 클래스와 JoinPoint](#7-aspect-클래스와-joinpoint)
-- [8. Around Advice와 proceed](#8-around-advice와-proceed)
-- [9. Spring AOP의 프록시 기반 동작](#9-spring-aop의-프록시-기반-동작)
-- [10. XML 기반 AOP 설정](#10-xml-기반-aop-설정)
-- [11. 현재 프로젝트에서 구현한 실습 구조](#11-현재-프로젝트에서-구현한-실습-구조)
-- [12. 자주 헷갈리는 질문](#12-자주-헷갈리는-질문)
-- [13. 시험 대비 핵심 정리](#13-시험-대비-핵심-정리)
+- [5. Advice를 적용 시점과 적용 대상으로 함께 읽기](#5-advice를-적용-시점과-적용-대상으로-함께-읽기)
+- [6. Aspect 클래스와 JoinPoint](#6-aspect-클래스와-joinpoint)
+- [7. Around Advice와 proceed](#7-around-advice와-proceed)
+- [8. Spring AOP의 프록시 기반 동작](#8-spring-aop의-프록시-기반-동작)
+- [9. XML 기반 AOP 설정](#9-xml-기반-aop-설정)
+- [10. 현재 프로젝트에서 구현한 실습 구조](#10-현재-프로젝트에서-구현한-실습-구조)
+- [11. 자주 헷갈리는 질문](#11-자주-헷갈리는-질문)
+- [12. 시험 대비 핵심 정리](#12-시험-대비-핵심-정리)
 
 ## 1. 7주차의 핵심 질문
 
@@ -113,6 +115,9 @@ public String placeOrder(double orderValue, double minimumValue) {
 ```
 
 로그와 예외 기록은 Aspect가 담당한다.
+
+중요한 변화는 "로그 코드가 사라졌다"가 아니다.
+로그 코드가 서비스에서 사라지고, Aspect라는 공통 기능 위치로 이동했다는 점이다.
 
 ## 3. 핵심 관심사와 공통 관심사
 
@@ -182,6 +187,14 @@ public void logAfterReturning(Object result) {
 
 이 메서드는 주문 메서드가 정상 종료된 뒤 실행되는 공통 기능이다.
 
+여기서 `@AfterReturning`은 실행 시점을 말하고,
+`pointcut = "orderOperation()"`은 적용 대상을 말한다.
+
+Advice는 항상 두 질문을 같이 던지며 읽어야 한다.
+
+- 언제 실행되는가?
+- 어디에 적용되는가?
+
 ### 4-2. JoinPoint
 
 JoinPoint는 Advice를 적용할 수 있는 지점이다.
@@ -191,19 +204,55 @@ Spring AOP에서는 주로 **스프링 빈의 메서드 실행 시점**이 JoinP
 필드 값 변경이나 생성자 호출까지 모두 다루는 일반 AspectJ와 달리,
 Spring AOP는 스프링 빈의 메서드 실행을 중심으로 이해하면 된다.
 
+현재 프로젝트에서는 `Week07AopService`의 public 메서드 실행이 학습 대상 JoinPoint다.
+
 ### 4-3. Pointcut
 
-Pointcut은 Advice를 어떤 대상에 적용할지 고르는 규칙이다.
+Pointcut은 Advice를 어떤 대상에 적용할지 고르는 조건이다.
+
+Pointcut은 별도 장으로 외우는 것보다,
+Advice 어노테이션 안에서 바로 해석하는 편이 학습 효과가 좋다.
 
 예:
 
 ```java
-@Pointcut("execution(* Lect_B.week07.Week07AopService.placeOrder(..))")
-private void orderOperation() {
+@Before("execution(* Lect_B.week07.Week07AopService.performSensitiveOperation(..))")
+public void authenticate(JoinPoint joinPoint) {
 }
 ```
 
-이 Pointcut은 `Week07AopService`의 `placeOrder` 메서드를 대상으로 삼는다.
+이 코드는 이렇게 읽는다.
+
+- 실행 시점: `@Before`
+- 적용 대상: `Week07AopService.performSensitiveOperation(..)`
+- 실행 내용: `authenticate()`
+
+또 다른 예:
+
+```java
+@Around("@annotation(Lect_B.week07.TraceAop)")
+public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwable {
+}
+```
+
+이 코드는 이렇게 읽는다.
+
+- 실행 시점: `@Around`
+- 적용 대상: `@TraceAop`가 붙은 메서드
+- 실행 내용: 어노테이션 대상 메서드 실행 전후 기록
+
+현재 7주차에서 읽어야 할 Pointcut 표현식은 다음과 같다.
+
+| 표현식 | 읽는 법 | 현재 실습에서의 의미 |
+|---|---|---|
+| `execution(...)` | 메서드 실행 모양으로 대상 선택 | 특정 서비스 메서드에 Advice 적용 |
+| `within(...)` | 클래스나 패키지 범위로 대상 선택 | 같은 패키지 전체를 잡을 때 사용 가능 |
+| `args(...)` | 전달 인자 타입으로 대상 선택 | 문자열 인자를 받는 메서드 등을 고를 때 사용 가능 |
+| `@annotation(...)` | 특정 어노테이션이 붙은 메서드 선택 | `@TraceAop` 대상 추적 |
+
+`within`과 `args`는 현재 화면 실습의 직접 라우트로 분리하지 않았다.
+대신 이론에서 `execution`, `@annotation`과 비교해서 읽는다.
+실습을 늘리기보다, 우선 실제로 자주 쓰는 적용 방식이 코드 안에서 어떻게 읽히는지에 집중하기 위해서다.
 
 ### 4-4. Aspect
 
@@ -221,17 +270,27 @@ public class Week07AdviceAspect {
 `@Aspect`는 AOP 설정 클래스임을 나타내고,
 `@Component`는 스프링 빈으로 등록되게 한다.
 
-## 5. Advice 종류
+Aspect를 읽을 때는 다음 순서가 좋다.
 
-Advice는 대상 메서드 실행 시점에 따라 나뉜다.
+1. 이 클래스가 어떤 서비스 메서드에 붙는가
+2. 각 Advice가 언제 실행되는가
+3. Advice 안에서 어떤 정보를 읽거나 바꾸는가
+4. 화면에는 어떤 실행 기록이 출력되는가
 
-| 종류 | 어노테이션 | 실행 시점 | 현재 실습 |
+## 5. Advice를 적용 시점과 적용 대상으로 함께 읽기
+
+Advice 종류는 대상 메서드 실행 시점에 따라 나뉜다.
+
+하지만 시점만 외우면 AOP를 제대로 읽기 어렵다.
+반드시 Pointcut 조건과 함께 읽어야 한다.
+
+| 종류 | 실행 시점 | 적용 대상 읽기 | 현재 실습 |
 |---|---|---|---|
-| Before Advice | `@Before` | 대상 메서드 실행 전 | `/week07/before` |
-| After Returning Advice | `@AfterReturning` | 정상 종료 후 | `/week07/after` 성공 |
-| After Throwing Advice | `@AfterThrowing` | 예외 발생 후 | `/week07/after` 실패 |
-| After Advice | `@After` | 정상/예외와 관계없이 실행 후 | `/week07/after` 공통 |
-| Around Advice | `@Around` | 대상 메서드 실행 전후 전체 | `/week07/around` |
+| `@Before` | 대상 메서드 실행 전 | `performSensitiveOperation(..)` | `/week07/before` |
+| `@AfterReturning` | 정상 종료 후 | `orderOperation()`이 가리키는 `placeOrder(..)` | `/week07/after` 성공 |
+| `@AfterThrowing` | 예외 발생 후 | `orderOperation()`이 가리키는 `placeOrder(..)` | `/week07/after` 실패 |
+| `@After` | 정상/예외와 관계없이 실행 후 | `orderOperation()`이 가리키는 `placeOrder(..)` | `/week07/after` 공통 |
+| `@Around` | 실행 전후 전체 | `check(..)` 또는 `@TraceAop` 메서드 | `/week07/around`, `/week07/pointcut` |
 
 ### 5-1. Before Advice
 
@@ -244,6 +303,12 @@ Advice는 대상 메서드 실행 시점에 따라 나뉜다.
 public void authenticate(JoinPoint joinPoint) {
 }
 ```
+
+읽는 법:
+
+- `@Before`: 대상 메서드 실행 전
+- `execution(...)`: 어떤 메서드인지 지정
+- `performSensitiveOperation(..)`: 민감 작업 메서드
 
 권한이 맞지 않으면 예외를 던지고,
 대상 메서드는 실행되지 않는다.
@@ -258,6 +323,12 @@ public void logAfterReturning(Object result) {
 }
 ```
 
+읽는 법:
+
+- `@AfterReturning`: 정상 종료 후
+- `orderOperation()`: `placeOrder(..)`를 가리키는 Pointcut 메서드
+- `returning = "result"`: 반환값을 `result` 파라미터로 받음
+
 반환값을 확인할 수 있으므로 성공 로그에 적합하다.
 
 ### 5-3. After Throwing Advice
@@ -270,11 +341,28 @@ public void exceptionProcess(Throwable ex) {
 }
 ```
 
+읽는 법:
+
+- `@AfterThrowing`: 예외 발생 후
+- `orderOperation()`: `placeOrder(..)`를 가리킴
+- `throwing = "ex"`: 예외 객체를 `ex` 파라미터로 받음
+
 예외 메시지를 기록하는 데 적합하다.
 
 ### 5-4. After Advice
 
 대상 메서드 실행 후 항상 실행된다.
+
+```java
+@After("orderOperation()")
+public void logAfter() {
+}
+```
+
+읽는 법:
+
+- `@After`: 정상 종료와 예외 발생 모두에서 실행
+- `orderOperation()`: `placeOrder(..)`에 적용
 
 정상 종료든 예외 발생이든 실행된다는 점에서 `finally`와 비슷하다.
 
@@ -282,117 +370,21 @@ public void exceptionProcess(Throwable ex) {
 
 대상 메서드 실행 전후 전체를 감싼다.
 
+```java
+@Around("execution(* Lect_B.week07.Week07AopService.check(..))")
+public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
+}
+```
+
+읽는 법:
+
+- `@Around`: 실행 전후 전체
+- `execution(...)`: `check(..)` 메서드에 적용
+- `ProceedingJoinPoint`: 대상 메서드 실행을 직접 진행할 수 있음
+
 인자를 바꾸거나, 반환값을 가공하거나, 실행 시간을 측정할 수 있다.
 
-단, `proceed()`를 호출해야 대상 메서드가 실제로 실행된다.
-
-## 6. Pointcut 표현식
-
-Pointcut은 Advice 적용 대상을 고르는 규칙이다.
-
-PPT에서는 다음 네 가지 표현식을 중요하게 다룬다.
-
-- `execution`
-- `within`
-- `args`
-- `@annotation`
-
-### 6-1. `execution`
-
-`execution`은 메서드 실행 모양을 기준으로 대상을 고른다.
-
-기본 형태:
-
-```text
-execution([수식어패턴] 리턴타입패턴 클래스이름패턴.메서드이름패턴(파라미터패턴))
-```
-
-예:
-
-```java
-@Pointcut("execution(* Lect_B.week07..*.*(..))")
-```
-
-의미:
-
-- `Lect_B.week07` 패키지와 하위 패키지
-- 모든 클래스
-- 모든 메서드
-- 모든 파라미터
-
-현재 실습에서는 특정 서비스 메서드를 정확히 지정한다.
-
-```java
-@Before("execution(* Lect_B.week07.Week07AopService.performSensitiveOperation(..))")
-```
-
-### 6-2. `within`
-
-`within`은 특정 클래스나 패키지 안의 메서드를 대상으로 삼는다.
-
-예:
-
-```java
-@Pointcut("within(Lect_B.week07..*)")
-```
-
-의미:
-
-- `Lect_B.week07` 패키지와 하위 패키지 안의 모든 클래스
-
-`execution`이 메서드 모양을 자세히 고르는 데 강하다면,
-`within`은 클래스나 패키지 범위로 묶을 때 읽기 쉽다.
-
-### 6-3. `args`
-
-`args`는 메서드 인자 타입을 기준으로 대상을 고른다.
-
-예:
-
-```java
-@Pointcut("args(java.lang.String, ..)")
-```
-
-의미:
-
-- 첫 번째 인자가 `String`
-- 뒤에는 0개 이상의 인자가 올 수 있음
-
-`args`는 단독으로 쓰면 범위가 넓어질 수 있으므로,
-패키지나 메서드 조건과 함께 쓰는 편이 안전하다.
-
-```java
-@Pointcut("execution(* Lect_B.week07..*(..)) && args(java.lang.String, ..)")
-```
-
-### 6-4. `@annotation`
-
-`@annotation`은 특정 어노테이션이 붙은 메서드를 대상으로 삼는다.
-
-현재 프로젝트에서는 `TraceAop` 어노테이션을 만들었다.
-
-```java
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface TraceAop {
-}
-```
-
-그리고 Aspect에서 다음처럼 사용한다.
-
-```java
-@Around("@annotation(Lect_B.week07.TraceAop)")
-public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-}
-```
-
-이 방식의 장점:
-
-- 패키지나 메서드 이름 패턴에 덜 의존한다
-- 적용 대상을 코드에서 명시적으로 표시할 수 있다
-- 특정 메서드만 추적할 때 읽기 쉽다
-
-## 7. Aspect 클래스와 JoinPoint
+## 6. Aspect 클래스와 JoinPoint
 
 Aspect 클래스는 Pointcut과 Advice를 함께 가진다.
 
@@ -435,7 +427,7 @@ public void authenticate(JoinPoint joinPoint) {
 
 즉 JoinPoint는 "지금 어떤 메서드가 어떤 인자로 호출되는가"를 Advice에서 알 수 있게 해 준다.
 
-## 8. Around Advice와 proceed
+## 7. Around Advice와 proceed
 
 `@Around`는 `ProceedingJoinPoint`를 사용한다.
 
@@ -458,7 +450,20 @@ public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
 현재 실습에서는 `role=admin`으로 요청해도,
 Around Advice가 `ADMIN`으로 바꿔 대상 메서드를 실행한다.
 
-## 9. Spring AOP의 프록시 기반 동작
+`@Around`의 Pointcut 조건도 같이 읽어야 한다.
+위 코드는 모든 Around Advice가 아니라, `Week07AopService.check(..)`에만 적용된다.
+
+반면 아래 코드는 적용 기준이 메서드 이름이 아니라 어노테이션이다.
+
+```java
+@Around("@annotation(Lect_B.week07.TraceAop)")
+public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwable {
+}
+```
+
+즉 같은 `@Around`라도 Pointcut 조건에 따라 적용 대상이 달라진다.
+
+## 8. Spring AOP의 프록시 기반 동작
 
 Spring AOP는 일반적으로 프록시 기반으로 동작한다.
 
@@ -476,7 +481,7 @@ Controller
 컨트롤러는 서비스를 직접 호출한다고 생각하지만,
 실제로는 스프링이 만든 프록시가 먼저 호출을 받는다.
 
-프록시는 Pointcut 조건에 맞는 메서드인지 확인하고,
+프록시는 Advice의 Pointcut 조건에 맞는 메서드인지 확인하고,
 조건에 맞으면 Advice를 실행한 뒤 실제 서비스 메서드를 호출한다.
 
 ### 현재 프로젝트의 AOP 의존성
@@ -496,7 +501,7 @@ implementation 'org.springframework.boot:spring-boot-starter-aspectj'
 - 같은 클래스 내부에서 자기 자신의 메서드를 직접 호출하면 프록시를 거치지 않을 수 있다
 - `private` 메서드에는 일반적인 방식으로 적용하기 어렵다
 
-## 10. XML 기반 AOP 설정
+## 9. XML 기반 AOP 설정
 
 PPT에는 XML 스키마 기반 AOP 설정도 포함되어 있다.
 
@@ -530,14 +535,14 @@ XML 방식에서는 다음 태그를 사용한다.
 
 - 기존 주차 코드가 `@Controller`, `@Service`, `@Component` 중심이다
 - Spring Boot 프로젝트와 잘 맞는다
-- Pointcut과 Advice를 한 클래스에서 함께 읽을 수 있다
+- Advice와 적용 조건을 한 클래스에서 함께 읽을 수 있다
 
-## 11. 현재 프로젝트에서 구현한 실습 구조
+## 10. 현재 프로젝트에서 구현한 실습 구조
 
 7주차 실습은 원본 코드의 흐름을 유지하되,
 현재 웹 프로젝트 구조에 맞게 다시 구성했다.
 
-### 11-1. Before 실습
+### 10-1. Before 실습
 
 URL:
 
@@ -548,10 +553,11 @@ URL:
 확인할 것:
 
 - 대상 메서드 실행 전에 `@Before`가 먼저 실행된다
+- `execution(...)` 조건이 `performSensitiveOperation(..)`을 가리킨다
 - `JoinPoint`로 메서드 이름과 인자를 읽는다
 - `role=USER`이면 예외가 발생하고 대상 메서드는 실행되지 않는다
 
-### 11-2. After 실습
+### 10-2. After 실습
 
 URL:
 
@@ -561,11 +567,12 @@ URL:
 
 확인할 것:
 
+- `orderOperation()` Pointcut 메서드가 `placeOrder(..)`를 가리킨다
 - 성공 시 `@AfterReturning`과 `@After`가 실행된다
 - 실패 시 `@AfterThrowing`과 `@After`가 실행된다
 - `@After`는 정상/예외와 관계없이 실행된다
 
-### 11-3. Around 실습
+### 10-3. Around 실습
 
 URL:
 
@@ -576,10 +583,11 @@ URL:
 확인할 것:
 
 - `@Around`가 대상 메서드 실행 전후를 감싼다
+- `execution(...)` 조건이 `check(..)`를 가리킨다
 - `role=admin`이 `ADMIN`으로 바뀐다
 - 반환값 앞에 `[Around 적용 결과]`가 붙는다
 
-### 11-4. Annotation Pointcut 실습
+### 10-4. Annotation 기반 적용 대상 실습
 
 URL:
 
@@ -590,9 +598,10 @@ URL:
 확인할 것:
 
 - `@TraceAop`가 붙은 메서드만 Advice 대상이 된다
-- `@annotation` Pointcut으로 특정 어노테이션을 기준으로 대상을 고른다
+- `@annotation(...)` 조건으로 특정 어노테이션을 기준으로 대상을 고른다
+- 같은 `@Around`라도 `execution(...)`과 `@annotation(...)`은 적용 기준이 다르다
 
-## 12. 자주 헷갈리는 질문
+## 11. 자주 헷갈리는 질문
 
 ### Q1. AOP는 DI와 같은 것인가?
 
@@ -636,13 +645,28 @@ AOP는 메서드 실행 전후에 공통 기능을 적용하는 방식이다.
 이런 표현식은 학습용으로는 편하지만,
 실제 코드에서는 패키지, 클래스, 메서드, 어노테이션 조건을 조합해서 좁히는 편이 안전하다.
 
-## 13. 시험 대비 핵심 정리
+### Q6. Pointcut 표현식은 따로 외워야 하는가?
+
+표현식 자체를 외우는 것보다,
+Advice 어노테이션 안에서 적용 대상을 읽는 연습이 먼저다.
+
+예:
+
+```java
+@After("orderOperation()")
+```
+
+이 줄을 보면 `@After`의 실행 시점을 먼저 보고,
+`orderOperation()`이 어떤 메서드를 가리키는지 찾아야 한다.
+
+## 12. 시험 대비 핵심 정리
 
 - AOP는 핵심 관심사와 공통 관심사를 분리하는 방식이다.
 - Advice는 실행할 공통 기능이다.
 - JoinPoint는 Advice를 적용할 수 있는 위치다.
 - Spring AOP에서는 주로 스프링 빈의 메서드 실행이 JoinPoint다.
-- Pointcut은 Advice 적용 대상을 고르는 규칙이다.
+- Pointcut은 Advice 적용 대상을 고르는 조건이다.
+- Pointcut은 독립적으로 외우기보다 Advice의 적용 대상을 설명하는 부분으로 읽어야 한다.
 - Aspect는 Advice와 Pointcut을 묶은 클래스다.
 - `@Before`는 대상 메서드 실행 전에 실행된다.
 - `@AfterReturning`은 대상 메서드가 정상 종료된 뒤 실행된다.

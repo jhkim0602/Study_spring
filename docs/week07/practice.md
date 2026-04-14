@@ -15,18 +15,21 @@
 - 정상 종료와 예외 발생에서 실행되는 Advice가 어떻게 다른가
 - `@After`는 성공과 실패 모두에서 실행되는가
 - `@Around`는 인자와 반환값을 바꿀 수 있는가
-- Pointcut 표현식으로 적용 대상을 어떻게 고르는가
+- Advice에 적힌 적용 조건이 어떤 서비스 메서드를 가리키는가
 
 즉 이 실습은 7주차 이론을 실제 라우트와 JSP 화면으로 검증하는 역할을 한다.
+
+Pointcut은 별도 화면의 암기 대상이 아니라,
+각 Advice가 어느 서비스 메서드에 붙는지 확인하는 기준으로 읽는다.
 
 ## 관련 파일
 
 | 경로 | 역할 |
 |---|---|
 | [`src/main/java/Lect_B/week07/Week07AopService.java`](../../src/main/java/Lect_B/week07/Week07AopService.java) | AOP 적용 대상 서비스 |
-| [`src/main/java/Lect_B/week07/Week07AdviceAspect.java`](../../src/main/java/Lect_B/week07/Week07AdviceAspect.java) | Advice와 Pointcut 정의 |
+| [`src/main/java/Lect_B/week07/Week07AdviceAspect.java`](../../src/main/java/Lect_B/week07/Week07AdviceAspect.java) | Advice와 적용 조건 정의 |
 | [`src/main/java/Lect_B/week07/AopEventLog.java`](../../src/main/java/Lect_B/week07/AopEventLog.java) | 화면에 보여 줄 Advice 실행 기록 저장 |
-| [`src/main/java/Lect_B/week07/TraceAop.java`](../../src/main/java/Lect_B/week07/TraceAop.java) | `@annotation` Pointcut 확인용 어노테이션 |
+| [`src/main/java/Lect_B/week07/TraceAop.java`](../../src/main/java/Lect_B/week07/TraceAop.java) | 어노테이션 기반 적용 조건 확인용 어노테이션 |
 | [`src/main/java/Lect_B/week07/Week07AopController.java`](../../src/main/java/Lect_B/week07/Week07AopController.java) | 7주차 실습 라우트 제어 |
 | [`src/main/java/Lect_B/week07/Week07IndexController.java`](../../src/main/java/Lect_B/week07/Week07IndexController.java) | `/week07` 진입 |
 | [`src/main/webapp/views/week07/*.jsp`](../../src/main/webapp/views/week07) | 실습 결과 화면 |
@@ -59,10 +62,10 @@ docs/week07/
 
 이 클래스에는 핵심 로직만 둔다.
 
-- `performSensitiveOperation()`: Before Advice 확인
-- `placeOrder()`: After Returning, After Throwing, After 확인
-- `check()`: Around Advice 확인
-- `annotationTarget()`: `@annotation` Pointcut 확인
+- `performSensitiveOperation()`: 실행 전 인증 확인 대상
+- `placeOrder()`: 정상 종료와 예외 발생 비교 대상
+- `check()`: 실행 전후 전체 제어 대상
+- `annotationTarget()`: `@TraceAop`가 붙은 추적 대상
 
 중요한 점:
 
@@ -89,7 +92,41 @@ docs/week07/
 
 즉 7주차 PPT의 핵심 용어가 이 클래스 하나에 모여 있다.
 
-코드를 읽을 때는 "이 메서드가 언제 실행되는가"를 기준으로 보면 된다.
+코드를 읽을 때는 "이 메서드가 언제 실행되는가"와 "어디에 적용되는가"를 같이 봐야 한다.
+
+### Advice와 적용 조건을 같이 읽는 법
+
+예:
+
+```java
+@Before("execution(* Lect_B.week07.Week07AopService.performSensitiveOperation(..))")
+public void authenticate(JoinPoint joinPoint) {
+}
+```
+
+이 코드는 다음처럼 읽는다.
+
+- `@Before`: 대상 메서드 실행 전
+- `execution(...)`: 메서드 실행 모양으로 대상 선택
+- `performSensitiveOperation(..)`: 실제 적용 대상
+- `authenticate()`: 실행할 공통 기능
+
+또 다른 예:
+
+```java
+@Around("@annotation(Lect_B.week07.TraceAop)")
+public Object traceAnnotatedMethod(ProceedingJoinPoint joinPoint) throws Throwable {
+}
+```
+
+이 코드는 다음처럼 읽는다.
+
+- `@Around`: 대상 메서드 실행 전후 전체
+- `@annotation(...)`: 특정 어노테이션이 붙은 메서드 선택
+- `@TraceAop`: 실제 적용 기준
+
+즉 Pointcut은 따로 떼어 암기하는 항목이 아니라,
+Advice가 붙는 대상을 알려 주는 부분이다.
 
 ## 4. `/week07/before` 화면은 무엇을 증명하나
 
@@ -112,8 +149,13 @@ docs/week07/
 - `role=ADMIN`이면 인증 성공 기록이 남고 대상 메서드가 실행된다
 - `role=USER`이면 `@Before`에서 예외가 발생한다
 - 예외가 발생하면 대상 메서드는 실행되지 않는다
+- 화면의 `[Before]` 기록은 `authenticate()` Advice에서 추가한 것이다
 
 즉 이 화면은 Advice가 핵심 로직 실행 전에 개입할 수 있다는 것을 보여 준다.
+
+이때 적용 조건은 `execution(* Lect_B.week07.Week07AopService.performSensitiveOperation(..))`이다.
+따라서 이 Advice는 아무 메서드에나 붙는 것이 아니라,
+민감 작업 메서드에만 붙는다.
 
 ## 5. `/week07/after` 화면은 무엇을 비교하나
 
@@ -146,6 +188,18 @@ docs/week07/
 `@After`는 정상 종료와 예외 발생 모두에서 실행된다.
 그래서 성공 예제와 실패 예제를 반드시 같이 비교해야 한다.
 
+세 Advice는 모두 `orderOperation()`을 적용 조건으로 사용한다.
+`orderOperation()`은 `placeOrder(..)` 메서드를 가리킨다.
+
+```java
+@Pointcut("execution(* Lect_B.week07.Week07AopService.placeOrder(..))")
+private void orderOperation() {
+}
+```
+
+즉 성공/실패/항상 실행의 차이는 Advice 종류에서 생기고,
+적용 대상은 같은 주문 메서드다.
+
 ## 6. `/week07/around` 화면은 무엇을 보여 주나
 
 `/week07/around`는 Around Advice를 확인하는 화면이다.
@@ -170,9 +224,14 @@ docs/week07/
 
 이 실습은 `@Around`가 가장 강력한 Advice라는 점을 보여 준다.
 
-## 7. `/week07/pointcut` 화면은 왜 필요한가
+적용 조건은 `execution(* Lect_B.week07.Week07AopService.check(..))`이다.
+따라서 이 Around Advice는 `check(..)` 메서드를 감싸는 예제다.
 
-`/week07/pointcut`은 `@annotation` Pointcut을 확인하는 화면이다.
+## 7. 어노테이션 기준 Around 화면은 어떻게 읽어야 하나
+
+`/week07/pointcut`은 "Pointcut만 따로 배우는 화면"이 아니다.
+
+이 화면은 `@Around` Advice가 적용 대상을 고르는 또 다른 방식을 보여 준다.
 
 대상 메서드:
 
@@ -183,19 +242,26 @@ public String annotationTarget(String label) {
 }
 ```
 
-Aspect의 Pointcut:
+Aspect의 Advice:
 
 ```java
 @Around("@annotation(Lect_B.week07.TraceAop)")
 ```
 
-이 예제가 필요한 이유:
+읽는 법:
 
-- `execution`은 패키지, 클래스, 메서드 이름 패턴으로 대상을 고른다
-- `@annotation`은 특정 어노테이션이 붙은 메서드를 대상으로 고른다
-- 어노테이션 기반 Pointcut은 적용 대상이 코드에 직접 드러난다
+- `@Around`: 대상 메서드 실행 전후 전체
+- `@annotation(...)`: 어노테이션이 붙은 메서드를 찾음
+- `TraceAop`: 실제 기준 어노테이션
+- `annotationTarget()`: 현재 실습에서 해당 어노테이션이 붙은 대상
 
-즉 이 화면은 Pointcut을 메서드 이름 패턴이 아니라 어노테이션으로도 지정할 수 있음을 보여 준다.
+이 예제는 `execution(...)`과 비교해서 읽어야 한다.
+
+- `execution(...)`: 메서드 이름과 위치를 식으로 지정
+- `@annotation(...)`: 메서드에 붙은 어노테이션으로 지정
+
+둘 다 Advice 적용 대상을 고르는 조건이다.
+차이는 "어떤 기준으로 고르는가"다.
 
 ## 8. `AopEventLog`를 왜 만들었는가
 
@@ -229,7 +295,7 @@ Aspect의 Pointcut:
 - 성공 주문에서 `@AfterReturning`과 `@After`가 기록되는가
 - 실패 주문에서 `@AfterThrowing`과 `@After`가 기록되는가
 - `@Around`가 인자를 변경하고 반환값을 가공하는가
-- `@annotation` Pointcut이 `@TraceAop` 메서드를 추적하는가
+- `@annotation` 조건이 `@TraceAop` 메서드를 추적하는가
 
 특히 `AopUtils.isAopProxy(aopService)` 검증은 중요하다.
 
@@ -238,12 +304,13 @@ Aspect의 Pointcut:
 ## 10. 초심자가 7주차 코드를 읽는 순서
 
 1. `Week07AopService`에서 핵심 로직 확인
-2. `Week07AdviceAspect`에서 어떤 Advice가 있는지 확인
-3. `Week07AopController`에서 URL과 서비스 호출 연결 확인
-4. `/week07/before`에서 Before Advice 확인
-5. `/week07/after`에서 성공/실패 Advice 비교
-6. `/week07/around`에서 인자 변경과 반환값 가공 확인
-7. `/week07/pointcut`에서 `@annotation` Pointcut 확인
+2. `Week07AdviceAspect`에서 Advice 종류 확인
+3. 각 Advice의 적용 조건이 어떤 메서드를 가리키는지 확인
+4. `Week07AopController`에서 URL과 서비스 호출 연결 확인
+5. `/week07/before`에서 Before Advice 확인
+6. `/week07/after`에서 성공/실패 Advice 비교
+7. `/week07/around`에서 인자 변경과 반환값 가공 확인
+8. `/week07/pointcut`에서 어노테이션 기반 적용 조건 확인
 
 이 순서가 좋은 이유:
 
@@ -257,7 +324,7 @@ Aspect의 Pointcut:
 AOP의 핵심은 공통 기능을 직접 호출하지 않는 것이다.
 
 서비스 메서드 안에서 `authenticate()`나 `logAfterReturning()`을 직접 부르지 않는다.
-스프링 프록시가 Pointcut 조건을 보고 Advice를 실행한다.
+스프링 프록시가 적용 조건을 보고 Advice를 실행한다.
 
 ### 포인트 2. `@After`와 `@AfterReturning`은 다르다
 
@@ -266,18 +333,21 @@ AOP의 핵심은 공통 기능을 직접 호출하지 않는 것이다.
 
 두 Advice를 같은 것으로 보면 안 된다.
 
-### 포인트 3. Pointcut은 너무 넓게 잡으면 위험하다
+### 포인트 3. 적용 조건은 Advice와 같이 읽어야 한다
 
 `execution(* Lect_B..*(..))`처럼 넓은 표현식은 많은 메서드에 Advice를 적용한다.
 
-학습용으로는 편하지만,
-실제 프로젝트에서는 패키지, 클래스, 메서드, 어노테이션 조건을 좁혀야 한다.
+학습할 때도 실제 프로젝트에서도 중요한 질문은 같다.
+
+> "이 Advice가 정확히 어느 메서드에 붙는가?"
+
+이 질문 없이 Advice 종류만 외우면 AOP 코드를 제대로 읽기 어렵다.
 
 ## 12. 이 실습을 끝내면 말할 수 있어야 하는 것
 
 - AOP가 왜 필요한지 설명할 수 있는가
 - 핵심 관심사와 공통 관심사를 구분할 수 있는가
-- Advice와 Pointcut의 역할을 설명할 수 있는가
+- Advice와 적용 조건의 역할을 설명할 수 있는가
 - `@Before`, `@AfterReturning`, `@AfterThrowing`, `@After`, `@Around`의 차이를 말할 수 있는가
 - `JoinPoint`와 `ProceedingJoinPoint`의 차이를 설명할 수 있는가
-- `execution`, `within`, `args`, `@annotation` Pointcut 표현식을 구분할 수 있는가
+- `execution`, `within`, `args`, `@annotation`이 대상을 고르는 기준이라는 점을 설명할 수 있는가

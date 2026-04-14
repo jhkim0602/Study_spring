@@ -21,5 +21,8 @@
     <br>
     <h3>6주차 실습</h3>
     <a href="/week06">빈 객체 관리 심화 실습</a>
+    <br>
+    <h3>7주차 실습</h3>
+    <a href="/week07">AOP 실습</a>
 </body>
 </html>

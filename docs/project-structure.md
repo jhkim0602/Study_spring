@@ -27,6 +27,7 @@ lect_B/
           week04/
           week05/
           week06/
+          week07/
       resources/
         application.properties
         static/assignment2223002.properties
@@ -41,6 +42,7 @@ lect_B/
           week04/
           week05/
           week06/
+          week07/
     test/
       java/
   docs/
@@ -53,6 +55,7 @@ lect_B/
     week04/
     week05/
     week06/
+    week07/
     assignment2223002/
 ```
 
@@ -87,7 +90,7 @@ lect_B/
 
 특히 현재 프로젝트에서는:
 
-- `docs/week02~week06/`에 주차별 문서가 있고
+- `docs/week02~week07/`에 주차별 문서가 있고
 - `docs/assignment2223002/`에 과제 전용 문서가 있다
 
 즉 `docs/`는 단순 메모 폴더가 아니라  
@@ -104,13 +107,13 @@ lect_B/
 현재 파일:
 
 ```java
-@SpringBootApplication(scanBasePackages = {"Lect_B.week04", "Lect_B.week05", "Lect_B.week06"})
+@SpringBootApplication(scanBasePackages = {"Lect_B.week04", "Lect_B.week05", "Lect_B.week06", "Lect_B.week07"})
 ```
 
 이 설정이 의미하는 것:
 
 - Spring Boot 애플리케이션 시작
-- 컴포넌트 스캔 범위를 `week04~week06`으로 제한
+- 컴포넌트 스캔 범위를 `week04~week07`로 제한
 
 왜 이렇게 했는가:
 
@@ -202,7 +205,28 @@ DI를 실제로 쓰는 주차다.
 - `AwareInterfaceImp.java`
 - `ExternalConfigComponent.java`
 
-### 3-6. `Lect_B/assignment2223002`
+### 3-6. `Lect_B/week07`
+
+AOP를 배우는 패키지다.
+
+핵심 파일:
+
+- `Week07AopService.java`
+- `Week07AdviceAspect.java`
+- `AopEventLog.java`
+- `TraceAop.java`
+- `Week07AopController.java`
+
+이 패키지는 핵심 로직과 공통 관심사를 분리해서 읽는 것이 중요하다.
+
+- `Week07AopService`는 핵심 로직을 가진다
+- `Week07AdviceAspect`는 인증, 로그, 예외 기록, 실행 시간 측정 같은 공통 기능을 가진다
+- JSP 화면은 Advice 실행 기록을 보여 준다
+
+즉 7주차는 "빈을 어떻게 만들고 주입하는가"에서 한 단계 더 나아가,
+"빈의 메서드 실행 흐름에 공통 기능을 어떻게 적용하는가"를 확인하는 주차다.
+
+### 3-7. `Lect_B/assignment2223002`
 
 과제 #1 전용 패키지다.
 
@@ -324,6 +348,7 @@ DI를 실제로 쓰는 주차다.
 - `src/main/webapp/views/week04/*.jsp`
 - `src/main/webapp/views/week05/*.jsp`
 - `src/main/webapp/views/week06/*.jsp`
+- `src/main/webapp/views/week07/*.jsp`
 
 ### `index.jsp`
 

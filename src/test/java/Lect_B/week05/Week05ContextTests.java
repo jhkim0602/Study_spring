@@ -28,7 +28,7 @@ class Week05ContextTests {
 		assertThat(controller).isNotNull();
 		assertThat(animalService.getAnoAnimals()).hasSize(2);
 		assertThat(animalService.getXmlAnimals()).hasSize(2);
-		assertThat(externalConfig.getHost()).isEqualTo("smtp.lect-b.local");
+		assertThat(externalConfig.getHost()).isEqualTo("smtp.gmail.com");
 		assertThat(scopeFactoryClient.createWorkUnit().getUnitId()).isNotBlank();
 	}
 }

@@ -16,7 +16,9 @@
 7. [5주차](week05/README.md)
 8. [6주차](week06/README.md)
 9. [7주차](week07/README.md)
-10. [과제 문서](assignment2223002/README.md)
+10. [10주차](week10/README.md)
+11. [11주차](week11/README.md)
+12. [과제 문서](assignment2223002/README.md)
 
 ### 자바 기본은 알고 있고 스프링이 처음인 경우
 
@@ -28,7 +30,9 @@
 6. [5주차](week05/README.md)
 7. [6주차](week06/README.md)
 8. [7주차](week07/README.md)
-9. [과제 문서](assignment2223002/README.md)
+9. [10주차](week10/README.md)
+10. [11주차](week11/README.md)
+11. [과제 문서](assignment2223002/README.md)
 
 ### 특정 주차만 빠르게 보고 싶은 경우
 
@@ -72,6 +76,8 @@
 - 5주차: 빈 범위, 라이프사이클, 외부 설정
 - 6주차: 5주차 개념을 다시 실습 중심으로 확인
 - 7주차: AOP로 공통 관심사 분리
+- 10주차: DB 연동(DataSource, JdbcTemplate, @Transactional)
+- 11주차: 요청 매핑, 커맨드 객체, 메시지 다국화
 
 따라서 문서도 주차별로 분리해야:
 
@@ -108,6 +114,14 @@ docs/
     theory.md
     practice.md
   week07/
+    README.md
+    theory.md
+    practice.md
+  week10/
+    README.md
+    theory.md
+    practice.md
+  week11/
     README.md
     theory.md
     practice.md
@@ -182,6 +196,12 @@ docs/
 - [7주차 문서 인덱스](week07/README.md)
 - [7주차 이론](week07/theory.md)
 - [7주차 실습](week07/practice.md)
+- [10주차 문서 인덱스](week10/README.md)
+- [10주차 이론](week10/theory.md)
+- [10주차 실습](week10/practice.md)
+- [11주차 문서 인덱스](week11/README.md)
+- [11주차 이론](week11/theory.md)
+- [11주차 실습](week11/practice.md)
 - [과제 문서 인덱스](assignment2223002/README.md)
 - [과제 이론](assignment2223002/theory.md)
 - [과제 실습](assignment2223002/practice.md)

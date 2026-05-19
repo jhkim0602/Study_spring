@@ -28,11 +28,19 @@ lect_B/
           week05/
           week06/
           week07/
+          week10/
+          week11/
       resources/
         application.properties
+        messages.properties
+        messages_ko.properties
+        messages_en.properties
         static/assignment2223002.properties
         static/external.properties
         static/xml/
+        sql/
+          week10-schema.sql
+          week10-data.sql
         xml/
       webapp/
         index.jsp
@@ -43,6 +51,8 @@ lect_B/
           week05/
           week06/
           week07/
+          week10/
+          week11/
     test/
       java/
   docs/
@@ -56,6 +66,8 @@ lect_B/
     week05/
     week06/
     week07/
+    week10/
+    week11/
     assignment2223002/
 ```
 
@@ -107,7 +119,7 @@ lect_B/
 현재 파일:
 
 ```java
-@SpringBootApplication(scanBasePackages = {"Lect_B.week04", "Lect_B.week05", "Lect_B.week06", "Lect_B.week07"})
+@SpringBootApplication(scanBasePackages = {"Lect_B.week04", "Lect_B.week05", "Lect_B.week06", "Lect_B.week07", "Lect_B.week10", "Lect_B.week11"})
 ```
 
 이 설정이 의미하는 것:
@@ -223,7 +235,40 @@ DI를 실제로 쓰는 주차다.
 
 이 파일들의 학습 해설은 `docs/week07/theory.md`와 `docs/week07/practice.md`에서 다룬다.
 
-### 3-7. `Lect_B/assignment2223002`
+### 3-7. `Lect_B/week10`
+
+10주차 DB 연동 실습 패키지다.
+
+핵심 파일:
+
+- `Member.java`
+- `MemberRowMapper.java`
+- `MemberRepository.java`
+- `MemberService.java`
+- `DBServiceController.java`
+- `Week10IndexController.java`
+- `src/main/resources/sql/week10-schema.sql`
+- `src/main/resources/sql/week10-data.sql`
+
+이 패키지는 `JdbcTemplate`, 함수형 인터페이스(`RowMapper`, `PreparedStatementCreator`, `BatchPreparedStatementSetter`), `KeyHolder`, `@Transactional`을 다룬다.
+학습용으로 MySQL 대신 H2 임베디드 DB(MySQL 호환 모드)를 사용한다.
+
+### 3-8. `Lect_B/week11`
+
+11주차 요청 매핑 · 커맨드 객체 · 메시지 다국화 실습 패키지다.
+
+핵심 파일:
+
+- `BasicProcessController1.java`
+- `MvcConfig.java`
+- `RegisterRequest.java`
+- `Question.java`, `AnsweredData.java`, `Respondent.java`
+- `Week11IndexController.java`
+- `src/main/resources/messages.properties`, `messages_ko.properties`, `messages_en.properties`
+
+이 패키지는 `@PathVariable`, `@RequestParam`, 커맨드 객체 자동 바인딩, 리스트/중첩 객체 바인딩, `RedirectAttributes`, `addViewControllers`, `MessageSource`/`LocaleResolver`/`LocaleChangeInterceptor`를 다룬다.
+
+### 3-9. `Lect_B/assignment2223002`
 
 과제 #1 전용 패키지다.
 
@@ -346,6 +391,8 @@ DI를 실제로 쓰는 주차다.
 - `src/main/webapp/views/week05/*.jsp`
 - `src/main/webapp/views/week06/*.jsp`
 - `src/main/webapp/views/week07/*.jsp`
+- `src/main/webapp/views/week10/*.jsp`
+- `src/main/webapp/views/week11/*.jsp`
 
 ### `index.jsp`
 

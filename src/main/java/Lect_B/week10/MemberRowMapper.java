@@ -22,12 +22,16 @@ public class MemberRowMapper implements RowMapper<Member> {
 		return createMember(
 				rs.getLong("ID"), rs.getString("EMAIL"),
 				rs.getString("PASSWORD"), rs.getString("NAME"),
-				rs.getTimestamp("REGDATE").toLocalDateTime());
+				rs.getTimestamp("REGDATE").toLocalDateTime()
+		);
 	}
 
+	// 람다식 형태(변수로 사용)
 	public RowMapper<Member> rowMapper = (rs, rowNum) ->
 			createMember(
 					rs.getLong("ID"), rs.getString("EMAIL"),
-					rs.getString("PASSWORD"), rs.getString("NAME"),
-					rs.getTimestamp("REGDATE").toLocalDateTime());
+					rs.getString("PASSWORD"),
+					rs.getString("NAME"),
+					rs.getTimestamp("REGDATE").toLocalDateTime()
+			);
 }

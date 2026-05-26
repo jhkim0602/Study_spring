@@ -9,7 +9,7 @@
 <body>
 <h1>Member List</h1>
 <c:choose>
-	<c:when test="${not empty members}">
+	<c:when test="${not empty memberList}">
 		<table border="1">
 			<thead>
 				<tr>
@@ -21,7 +21,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<c:forEach var="member" items="${members}" varStatus="status">
+				<c:forEach var="member" items="${memberList}" varStatus="status">
 					<tr>
 						<td>${member.id}</td>
 						<td>${member.email}</td>

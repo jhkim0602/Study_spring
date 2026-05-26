@@ -30,6 +30,7 @@ lect_B/
           week07/
           week10/
           week11/
+          week13/
       resources/
         application.properties
         messages.properties
@@ -53,6 +54,7 @@ lect_B/
           week07/
           week10/
           week11/
+          week13/
     test/
       java/
   docs/
@@ -68,6 +70,7 @@ lect_B/
     week07/
     week10/
     week11/
+    week13/
     assignment2223002/
 ```
 
@@ -119,7 +122,7 @@ lect_B/
 현재 파일:
 
 ```java
-@SpringBootApplication(scanBasePackages = {"Lect_B.week04", "Lect_B.week05", "Lect_B.week06", "Lect_B.week07", "Lect_B.week10", "Lect_B.week11"})
+@SpringBootApplication(scanBasePackages = {"Lect_B.week04", "Lect_B.week05", "Lect_B.week06", "Lect_B.week07", "Lect_B.week10", "Lect_B.week11", "Lect_B.week13"})
 ```
 
 이 설정이 의미하는 것:
@@ -268,7 +271,24 @@ DI를 실제로 쓰는 주차다.
 
 이 패키지는 `@PathVariable`, `@RequestParam`, 커맨드 객체 자동 바인딩, 리스트/중첩 객체 바인딩, `RedirectAttributes`, `addViewControllers`, `MessageSource`/`LocaleResolver`/`LocaleChangeInterceptor`를 다룬다.
 
-### 3-9. `Lect_B/assignment2223002`
+### 3-9. `Lect_B/week13`
+
+13주차 커맨드 객체 검증 · 타입 변환 실습 패키지다.
+
+핵심 파일:
+
+- `BasicProcessController2.java`
+- `RegisterRequestForm.java`
+- `RegisterRequestValidator.java`
+- `FormatCommand.java`
+- `MvcConfig2.java`
+- `Week13IndexController.java`
+
+이 패키지는 `<spring:message>` / `<form:form>` 태그, `Validator` 인터페이스, `Errors`/`BindingResult`, JSR-380 어노테이션 (`@Email`, `@Size`, `@Pattern`), `@Valid` / `@Validated`, 글로벌 Validator, `@DateTimeFormat` / `@NumberFormat`을 다룬다.
+
+`build.gradle`에 `spring-boot-starter-validation` 의존성이 추가된 이유가 이 패키지에 있다.
+
+### 3-10. `Lect_B/assignment2223002`
 
 과제 #1 전용 패키지다.
 
